@@ -42,7 +42,7 @@
             font-family: 'Public Sans', sans-serif;
         }
     </style>
-    <script src="../components/header.js"></script>
+    <script type="module" src="../components/header.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark min-h-screen">
@@ -287,7 +287,9 @@
             </div>
         </footer>
     </div>
-    <script>
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
         // Store user state globally for quick access
         let currentUserState = null;
 
@@ -301,7 +303,7 @@
 
             try {
                 // Fetch full AI gamification dashboard
-                const res = await fetch(`http://localhost:5000/api/rewards/dashboard`, {
+                const res = await fetch(`${API_BASE}/api/rewards/dashboard`, {
                     method: "GET",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -318,7 +320,7 @@
                 currentUserState = data;
 
                 // Fetch basic user profile for name (could also be returned in dashboard API but this preserves backward compatibility)
-                const userRes = await fetch(`http://localhost:5000/api/auth/me`, {
+                const userRes = await fetch(`${API_BASE}/api/auth/me`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -498,7 +500,7 @@
 
             const token = localStorage.getItem("token");
             try {
-                const res = await fetch(`http://localhost:5000/api/rewards/claim-task`, {
+                const res = await fetch(`${API_BASE}/api/rewards/claim-task`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ taskId })
@@ -532,7 +534,7 @@
 
             const token = localStorage.getItem("token");
             try {
-                const res = await fetch(`http://localhost:5000/api/rewards/redeem`, {
+                const res = await fetch(`${API_BASE}/api/rewards/redeem`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ rewardId, deliveryAddress })
@@ -550,7 +552,13 @@
                 console.error(err);
             }
         }
-    </script>
+    
+window.renderDashboard = renderDashboard;
+window.filterRewards = filterRewards;
+window.renderRewardsGrid = renderRewardsGrid;
+window.claimTask = claimTask;
+window.redeemReward = redeemReward;
+</script>
 </body>
 
 </html>

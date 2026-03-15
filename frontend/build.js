@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 function copyDir(src, dest) {
     fs.mkdirSync(dest, { recursive: true });
@@ -45,15 +44,7 @@ function walk(dir) {
     return results;
 }
 
-// Replace process.env.NEXT_PUBLIC_API_URL dynamically
-const files = walk(distPath);
-files.forEach(f => {
-    let c = fs.readFileSync(f, 'utf8');
-    if (c.includes('process.env.NEXT_PUBLIC_API_URL')) {
-        c = c.replace(/process\.env\.NEXT_PUBLIC_API_URL/g, `"${API_URL}"`);
-        fs.writeFileSync(f, c);
-        console.log(`Injected environment variables into: ${path.basename(f)}`);
-    }
-});
+// Environment variable replacement logic has been removed as per instructions,
+// since the frontend now uses apiConfig.js natively.
 
 console.log(`Build complete. Output written to /dist`);

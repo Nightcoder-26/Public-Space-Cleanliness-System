@@ -484,8 +484,10 @@
     </div>
     </div>
 
-    <script>
-        const API_BASE = `${"https://mock-production-api.com" || 'http://localhost:5000/api'}`;
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+        const API_BASE = `${API_BASE}/api`;
         let map;
         let currentUser = null;
         let currentNgoProfile = null;
@@ -545,7 +547,7 @@
 
         function initSocket(ngoId) {
             try {
-                socket = io("https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : 'http://localhost:5000', { transports: ['websocket', 'polling'] });
+                socket = io(API_BASE, { transports: ['websocket', 'polling'] });
                 // We could listen to specific events if implemented on the backend.
                 // Assuming global 'case_assigned' or similar. 
                 // We'll simulate refresh if we see a relevant message
@@ -884,7 +886,17 @@
                 btn.innerHTML = originalText;
             }
         }
-    </script>
+    
+window.checkAuth = checkAuth;
+window.initSocket = initSocket;
+window.initProfile = initProfile;
+window.populateUI = populateUI;
+window.initMap = initMap;
+window.renderCharts = renderCharts;
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.saveProfile = saveProfile;
+</script>
 </body>
 
 </html>

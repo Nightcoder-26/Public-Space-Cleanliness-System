@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="../components/header.js"></script>
+    <script type="module" src="../components/header.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -281,8 +281,10 @@
             </div>
         </main>
     </div>
-    <script>
-        const API_BASE = "https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : "http://localhost:5000";
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+        const API_BASE = API_BASE;
         let token = localStorage.getItem("token");
         let currentUser = null;
         let map = null;
@@ -746,7 +748,26 @@
                 });
             } catch (e) { console.error('Socket init err', e); }
         }
-    </script>
+    
+window.loadUser = loadUser;
+window.loadFeed = loadFeed;
+window.renderFeed = renderFeed;
+window.createPostHTML = createPostHTML;
+window.compressImage = compressImage;
+window.showPostStatus = showPostStatus;
+window.createPost = createPost;
+window.editPostPrompt = editPostPrompt;
+window.deletePost = deletePost;
+window.toggleLike = toggleLike;
+window.toggleComments = toggleComments;
+window.loadComments = loadComments;
+window.postComment = postComment;
+window.loadTrending = loadTrending;
+window.initMap = initMap;
+window.plotPostsOnMap = plotPostsOnMap;
+window.fetchNearbyIssues = fetchNearbyIssues;
+window.initSocket = initSocket;
+</script>
 </body>
 
 </html>

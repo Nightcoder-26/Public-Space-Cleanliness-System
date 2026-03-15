@@ -213,7 +213,9 @@
             </div>
         </div>
     </div>
-    <script>
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
         let selectedRole = "citizen";
         let authMode = "login"; // "login" or "signup"
 
@@ -306,7 +308,7 @@
             }
 
             try {
-                const API_BASE = "http://localhost:5000";
+                const API_BASE = API_BASE;
 
                 const response = await fetch(API_BASE + endpoint, {
                     method: "POST",
@@ -376,7 +378,11 @@
                 alert("Apple Login failed. Make sure you have configured a valid App ID and Redirect URI.");
             }
         });
-    </script>
+    
+window.updateRoleUI = updateRoleUI;
+window.updateModeUI = updateModeUI;
+window.handleCredentialResponse = handleCredentialResponse;
+</script>
 </body>
 
 </html>

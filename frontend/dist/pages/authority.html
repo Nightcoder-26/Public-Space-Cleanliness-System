@@ -910,9 +910,11 @@
         </main>
     </div>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script>
-        const API_BASE = `${"https://mock-production-api.com" || 'http://localhost:5000/api'}`;
-        const socket = io("https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : 'http://localhost:5000');
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+        const API_BASE = `${API_BASE}/api`;
+        const socket = io(API_BASE);
 
         // Stats elements
         const statResponseTime = document.getElementById('stat-response-time');
@@ -1915,7 +1917,40 @@
 
         // Start
         initDashboard();
-    </script>
+    
+window.initDashboard = initDashboard;
+window.initMap = initMap;
+window.updateMap = updateMap;
+window.fetchStats = fetchStats;
+window.fetchIssues = fetchIssues;
+window.renderIssuesTable = renderIssuesTable;
+window.acceptTask = acceptTask;
+window.resolveTask = resolveTask;
+window.showNotification = showNotification;
+window.setupSocketListeners = setupSocketListeners;
+window.renderChatMessage = renderChatMessage;
+window.loadChatHistory = loadChatHistory;
+window.switchRoom = switchRoom;
+window.openIssueRoom = openIssueRoom;
+window.handleTyping = handleTyping;
+window.togglePriority = togglePriority;
+window.handleChatEnter = handleChatEnter;
+window.sendChatMessage = sendChatMessage;
+window.toggleDirectory = toggleDirectory;
+window.fetchDirectory = fetchDirectory;
+window.requestChatSummary = requestChatSummary;
+window.generateTeamFormation = generateTeamFormation;
+window.switchMainView = switchMainView;
+window.fetchAIInsights = fetchAIInsights;
+window.fetchWorkQueue = fetchWorkQueue;
+window.fetchNGORegistry = fetchNGORegistry;
+window.openNGOProfile = openNGOProfile;
+window.closeNGOProfile = closeNGOProfile;
+window.renderNGOCharts = renderNGOCharts;
+window.fetchAuditLogs = fetchAuditLogs;
+window.exportAIReport = exportAIReport;
+window.handleSmartSearch = handleSmartSearch;
+</script>
 
     <!-- NGO PROFILE MODAL -->
     <div id="ngo-profile-modal"

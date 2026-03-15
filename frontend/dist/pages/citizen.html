@@ -17,7 +17,7 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="../components/header.js"></script>
+    <script type="module" src="../components/header.js"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -730,8 +730,10 @@
             </div>
         </div>
 
-        <script>
-            const API = "https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : 'http://localhost:5000';
+        <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+            const API = API_BASE;
             let allIssues = [];
             let map = null;
             let markerCluster = null;
@@ -1388,7 +1390,38 @@
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') { closeReportModal(); closeDetailModal(); }
             });
-        </script>
+        
+window.setDefaultDateTime = setDefaultDateTime;
+window.doLogout = doLogout;
+window.loadDashboard = loadDashboard;
+window.renderProfile = renderProfile;
+window.renderStats = renderStats;
+window.renderAchievements = renderAchievements;
+window.renderAIInsights = renderAIInsights;
+window.loadDailyFootprint = loadDailyFootprint;
+window.initSocket = initSocket;
+window.initMap = initMap;
+window.loadMapIssues = loadMapIssues;
+window.setMapFilter = setMapFilter;
+window.refilterMap = refilterMap;
+window.addMapPin = addMapPin;
+window.rebuildHeatmap = rebuildHeatmap;
+window.toggleHeatmap = toggleHeatmap;
+window.renderIssuesTable = renderIssuesTable;
+window.filterIssues = filterIssues;
+window.showDetail = showDetail;
+window.closeDetailModal = closeDetailModal;
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.resetReportForm = resetReportForm;
+window.previewPhoto = previewPhoto;
+window.useMyLocation = useMyLocation;
+window.haversineDistance = haversineDistance;
+window.submitReport = submitReport;
+window.compressImage = compressImage;
+window.toBase64 = toBase64;
+window.saveProfile = saveProfile;
+</script>
 
     <!-- ══════════════════════════════════════════════════════════
          SLIDING PROFILE PANEL

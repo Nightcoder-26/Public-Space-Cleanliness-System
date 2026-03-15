@@ -498,9 +498,11 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE = `${"https://mock-production-api.com" || 'http://localhost:5000/api'}`;
-        const socket = io("https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : "http://localhost:5000");
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+        const API_BASE = `${API_BASE}/api`;
+        const socket = io(API_BASE);
 
         socket.on("issue_update", () => {
             fetchOverview();
@@ -783,7 +785,16 @@
             setTimeout(fetchProjectImpact, 500); // Small delay to let map init cleanly
             fetchImpactInsights();
         });
-    </script>
+    
+window.animateValue = animateValue;
+window.fetchOverview = fetchOverview;
+window.initGISMap = initGISMap;
+window.loadHeatmap = loadHeatmap;
+window.locateUser = locateUser;
+window.fetchImpactInsights = fetchImpactInsights;
+window.initCO2Chart = initCO2Chart;
+window.fetchProjectImpact = fetchProjectImpact;
+</script>
 </body>
 
 </html>

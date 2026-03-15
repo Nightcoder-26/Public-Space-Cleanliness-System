@@ -129,8 +129,10 @@
     </main>
 </div>
 
-<script>
-    const API_BASE = `${"https://mock-production-api.com" || 'http://localhost:5000/api'}`;
+<script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+    const API_BASE = `${API_BASE}/api`;
 
     // ─ Report Card Template
     function createReportCard(title, description, date, icon, color, tags) {
@@ -287,6 +289,14 @@
     buildReportGrids();
     fetchKPIs();
     buildEngagementChart();
+
+window.createReportCard = createReportCard;
+window.buildReportGrids = buildReportGrids;
+window.fetchKPIs = fetchKPIs;
+window.buildEngagementChart = buildEngagementChart;
+window.downloadPDF = downloadPDF;
+window.downloadCSV = downloadCSV;
+window.exportDataset = exportDataset;
 </script>
 </body>
 </html>

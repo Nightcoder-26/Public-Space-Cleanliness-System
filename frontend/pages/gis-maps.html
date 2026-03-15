@@ -140,8 +140,10 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE = `http://localhost:5000/api`;
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+        const API_BASE = `${API_BASE}/api`;
 
         // ─── Map Init ─────────────────────────────────────────────────────────────
         const map = L.map('fullMap', {
@@ -325,11 +327,16 @@
         }
 
         // ─── Live Reload on Socket Events ─────────────────────────────────────────
-        const socket = io('http://localhost:5000');
+        const socket = io(API_BASE);
         socket.on('issue_update', () => { loadIssueMarkers(); });
 
         // ─── Boot ─────────────────────────────────────────────────────────────────
         loadIssueMarkers();
-    </script>
+    
+window.getMarkerIcon = getMarkerIcon;
+window.toggleLayer = toggleLayer;
+window.loadIssueMarkers = loadIssueMarkers;
+window.locateUser = locateUser;
+</script>
 </body>
 </html>

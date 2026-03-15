@@ -1,3 +1,4 @@
+import { API_BASE } from '../js/apiConfig.js';
 /**
  * CleanCity — Global Shared Header Component
  * Inject into any citizen page with:
@@ -9,7 +10,7 @@
 (function () {
     'use strict';
 
-    const API = "https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : 'http://localhost:5000';
+    const API = API_BASE;
 
     // ─── Determine active page for nav highlighting ───────────────────────
     const path = window.location.pathname;

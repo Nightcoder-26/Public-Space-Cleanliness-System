@@ -435,9 +435,11 @@
 
     <div id="toast-container"></div>
 
-    <script>
+    <script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
         // Config
-        const API_URL = `${"https://mock-production-api.com" || 'http://localhost:5000/api'}`;
+        const API_URL = `${API_BASE}/api`;
         let projectData = null;
         let selectedAmount = 50;
         let selectedMethod = 'upi';
@@ -770,7 +772,23 @@
                 // In a real app, this would trigger a Blob download or open a PDF endpoint
             }, 1000);
         }
-    </script>
+    
+window.fetchProjectDetails = fetchProjectDetails;
+window.fetchProjectDonations = fetchProjectDonations;
+window.renderProject = renderProject;
+window.renderLeaderboard = renderLeaderboard;
+window.selectAmount = selectAmount;
+window.customInput = customInput;
+window.selectMethod = selectMethod;
+window.updatePreview = updatePreview;
+window.initiatePayment = initiatePayment;
+window.cancelPayment = cancelPayment;
+window.simulateBankWebhook = simulateBankWebhook;
+window.showSuccessScreen = showSuccessScreen;
+window.showToast = showToast;
+window.shareProject = shareProject;
+window.downloadReceipt = downloadReceipt;
+</script>
 </body>
 
 </html>

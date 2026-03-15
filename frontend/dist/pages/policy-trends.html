@@ -225,8 +225,10 @@
     </main>
 </div>
 
-<script>
-    const API_BASE = `${"https://mock-production-api.com" || 'http://localhost:5000/api'}`;
+<script type="module">
+import { API_BASE } from '../js/apiConfig.js';
+
+    const API_BASE = `${API_BASE}/api`;
 
     // ─ Update timestamp
     document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -357,7 +359,7 @@
     }
 
     // ─ Socket.io
-    const socket = io("https://mock-production-api.com" ? "https://mock-production-api.com".replace('/api', '') : 'http://localhost:5000');
+    const socket = io(API_BASE);
     socket.on('issue_update', () => fetchKPIs());
 
     // ─ Boot
@@ -365,6 +367,11 @@
     buildPolicyChart();
     buildRegionChart();
     fetchAIInsights();
+
+window.fetchKPIs = fetchKPIs;
+window.buildPolicyChart = buildPolicyChart;
+window.buildRegionChart = buildRegionChart;
+window.fetchAIInsights = fetchAIInsights;
 </script>
 </body>
 </html>
