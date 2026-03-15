@@ -499,8 +499,8 @@
     </div>
 
     <script>
-        const API_BASE = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}`;
-        const socket = io(process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') : "http://localhost:5000");
+        const API_BASE = `http://localhost:5000/api`;
+        const socket = io('http://localhost:5000');
 
         socket.on("issue_update", () => {
             fetchOverview();

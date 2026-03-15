@@ -9,7 +9,7 @@
 (function () {
     'use strict';
 
-    const API = process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const API = 'http://localhost:5000';
 
     // ─── Determine active page for nav highlighting ───────────────────────
     const path = window.location.pathname;

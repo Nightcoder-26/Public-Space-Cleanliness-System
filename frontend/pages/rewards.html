@@ -301,7 +301,7 @@
 
             try {
                 // Fetch full AI gamification dashboard
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/rewards/dashboard`, {
+                const res = await fetch(`http://localhost:5000/api/rewards/dashboard`, {
                     method: "GET",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -318,7 +318,7 @@
                 currentUserState = data;
 
                 // Fetch basic user profile for name (could also be returned in dashboard API but this preserves backward compatibility)
-                const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/me`, {
+                const userRes = await fetch(`http://localhost:5000/api/auth/me`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -498,7 +498,7 @@
 
             const token = localStorage.getItem("token");
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/rewards/claim-task`, {
+                const res = await fetch(`http://localhost:5000/api/rewards/claim-task`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ taskId })
@@ -532,7 +532,7 @@
 
             const token = localStorage.getItem("token");
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/rewards/redeem`, {
+                const res = await fetch(`http://localhost:5000/api/rewards/redeem`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ rewardId, deliveryAddress })
