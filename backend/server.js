@@ -5,30 +5,78 @@ const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
 const { Server } = require("socket.io");
+
 const connectDB = require("./config/db");
 
 const app = express();
-const httpServer = http.createServer(app);
+const server = http.createServer(app);
 
-// Socket.io — allows real-time map updates across all clients
-const io = new Server(httpServer, {
-    cors: { origin: "*", methods: ["GET", "POST"] }
-});
-
+// Connect Database
 connectDB();
+
+// -----------------------------
+// Security & Middleware
+// -----------------------------
+app.use(helmet());
+app.use(compression());
 
 app.use(cors({
     origin: process.env.FRONTEND_URL || "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
-app.use(compression());
-app.use(helmet());
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// Attach io to app so controllers can emit events via req.app.locals.io
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// -----------------------------
+// Socket.io Setup
+// -----------------------------
+const io = new Server(server, {
+    cors: {
+        origin: process.env.FRONTEND_URL || "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// attach io globally
 app.locals.io = io;
 
+io.on("connection", (socket) => {
+    console.log("Client connected:", socket.id);
+
+    // Join NGO chat room
+    socket.on("join_room", (room) => {
+        socket.join(room);
+    });
+
+    // Leave room
+    socket.on("leave_room", (room) => {
+        socket.leave(room);
+    });
+
+    // Typing indicator
+    socket.on("typing", ({ room, user }) => {
+        socket.to(room).emit("typing", user);
+    });
+
+    socket.on("stop_typing", ({ room, user }) => {
+        socket.to(room).emit("stop_typing", user);
+    });
+
+    // Chat message
+    socket.on("chat_message", (msg) => {
+        io.to("global_ngo_network").emit("chat_message", msg);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Client disconnected:", socket.id);
+    });
+});
+
+// -----------------------------
+// API Routes
+// -----------------------------
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/issues", require("./routes/citizenRoutes"));
 app.use("/api/ai", require("./routes/aiRoutes"));
@@ -44,53 +92,33 @@ app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/audit", require("./routes/auditRoutes"));
 app.use("/api/operations", require("./routes/operationsRoutes"));
 
+// -----------------------------
+// Health Check Route
+// -----------------------------
 app.get("/", (req, res) => {
-    res.send("Public Space Cleanliness System API is running!");
+    res.status(200).json({
+        success: true,
+        message: "Public Space Cleanliness System API is running"
+    });
 });
 
-// Global error handler to ensure JSON responses
+// -----------------------------
+// Global Error Handler
+// -----------------------------
 app.use((err, req, res, next) => {
-    console.error('Express error:', err.message);
+    console.error("Server Error:", err);
+
     res.status(err.status || 500).json({
         success: false,
-        message: err.message || 'Internal Server Error'
+        message: err.message || "Internal Server Error"
     });
 });
 
-io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id);
-
-    // Join specific issue chat room
-    socket.on("join_room", (room) => {
-        socket.join(room);
-        console.log(`Socket ${socket.id} joined room ${room}`);
-    });
-
-    // Leave a room
-    socket.on("leave_room", (room) => {
-        socket.leave(room);
-        console.log(`Socket ${socket.id} left room ${room}`);
-    });
-
-    // Typing indicators
-    socket.on("typing", ({ room, user }) => {
-        socket.to(room).emit("typing", user);
-    });
-    socket.on("stop_typing", ({ room, user }) => {
-        socket.to(room).emit("stop_typing", user);
-    });
-
-    // Global chat relay is still maintained via REST but can relay direct if needed
-    socket.on("chat_message", (msg) => {
-        io.to("global_ngo_network").emit("chat_message", msg);
-    });
-
-    socket.on("disconnect", () => {
-        console.log("Client disconnected:", socket.id);
-    });
-});
-
+// -----------------------------
+// Start Server
+// -----------------------------
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
+
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
