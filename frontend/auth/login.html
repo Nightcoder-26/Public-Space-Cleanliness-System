@@ -102,7 +102,7 @@
                 </div>
             </div>
             <div class="absolute bottom-10 left-20 text-slate-500 text-sm">
-                © 2024 CivicImpact Foundation. Empowering civic duty.
+                © 2026 CivicImpact Foundation. Empowering civic duty.
             </div>
         </div>
         <div
@@ -306,14 +306,15 @@
             }
 
             try {
-                const response = await fetch(process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') : "http://localhost:5000" + endpoint, {
+                const API_BASE = "https://public-space-cleanliness-system-backend.onrender.com";
+
+                const response = await fetch(API_BASE + endpoint, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify(bodyArgs)
                 });
-
                 const data = await response.json();
 
                 if (response.ok) {
