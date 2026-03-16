@@ -143,7 +143,7 @@
     <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
 
-        const API_BASE = `${API_BASE}/api`;
+        const API = API_BASE;
 
         // ─── Map Init ─────────────────────────────────────────────────────────────
         const map = L.map('fullMap', {
@@ -209,7 +209,7 @@ import { API_BASE } from '../js/apiConfig.js';
         async function loadIssueMarkers() {
             const loadingEl = document.getElementById('mapLoading');
             try {
-                const res = await fetch(`${API_BASE}/operations/geo`);
+                const res = await fetch(`${API}/api/operations/geo`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 allIssues = await res.json();
 
@@ -311,7 +311,7 @@ import { API_BASE } from '../js/apiConfig.js';
                     document.getElementById('userLocationLabel').textContent = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
 
                     try {
-                        const r = await fetch(`${API_BASE}/operations/reverse-geocode?lat=${lat}&lng=${lng}`);
+                        const r = await fetch(`${API}/api/operations/reverse-geocode?lat=${lat}&lng=${lng}`);
                         const geo = await r.json();
                         document.getElementById('userLocationLabel').textContent = `${geo.city || ''}, ${geo.state || ''}`.trim().replace(/^,|,$/g, '') || `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
                     } catch (_) {}
@@ -327,7 +327,7 @@ import { API_BASE } from '../js/apiConfig.js';
         }
 
         // ─── Live Reload on Socket Events ─────────────────────────────────────────
-        const socket = io(API_BASE);
+        const socket = io(API);
         socket.on('issue_update', () => { loadIssueMarkers(); });
 
         // ─── Boot ─────────────────────────────────────────────────────────────────

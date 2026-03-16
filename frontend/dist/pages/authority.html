@@ -41,13 +41,13 @@
 
             try {
                 // Fetch dynamic NGO data for the sidebar
-                const res = await fetch(`${API_BASE}/ngo/directory`);
+                const res = await fetch(`${API}/ngo/directory`);
                 const ngos = await res.json();
                 if (ngos && ngos.length > 0) {
                     const primaryNgo = ngos[0]; // Display the primary/first partner
 
                     // Fetch deep metrics matching the ngo-profile calculation logic
-                    const profileRes = await fetch(`${API_BASE}/ngo/${primaryNgo._id}`);
+                    const profileRes = await fetch(`${API}/ngo/${primaryNgo._id}`);
                     if (profileRes.ok) {
                         const profileData = await profileRes.json();
                         const profile = profileData.profile;
@@ -913,8 +913,8 @@
     <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
 
-        const API_BASE = `${API_BASE}/api`;
-        const socket = io(API_BASE);
+        const API = `${API_BASE}/api`;
+        const socket = io(API);
 
         // Stats elements
         const statResponseTime = document.getElementById('stat-response-time');
@@ -985,7 +985,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchStats() {
             try {
-                const res = await fetch(`${API_BASE}/authority/dashboard`, {
+                const res = await fetch(`${API}/authority/dashboard`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -1007,7 +1007,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchIssues() {
             try {
-                const res = await fetch(`${API_BASE}/authority/issues`, {
+                const res = await fetch(`${API}/authority/issues`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 allIssues = await res.json();
@@ -1137,7 +1137,7 @@ import { API_BASE } from '../js/apiConfig.js';
         async function acceptTask(issueId) {
 
             try {
-                const res = await fetch(`${API_BASE}/authority/issues/${issueId}/accept`, {
+                const res = await fetch(`${API}/authority/issues/${issueId}/accept`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1157,7 +1157,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function resolveTask(issueId) {
             try {
-                const res = await fetch(`${API_BASE}/authority/issues/${issueId}/resolve`, {
+                const res = await fetch(`${API}/authority/issues/${issueId}/resolve`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1348,7 +1348,7 @@ import { API_BASE } from '../js/apiConfig.js';
             if (loader) loader.classList.remove('hidden');
 
             try {
-                const url = issueId === 'global' ? `${API_BASE}/ngo/chat/messages` : `${API_BASE}/ngo/chat/messages/${issueId}`;
+                const url = issueId === 'global' ? `${API}/ngo/chat/messages` : `${API}/ngo/chat/messages/${issueId}`;
                 const res = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1449,7 +1449,7 @@ import { API_BASE } from '../js/apiConfig.js';
             };
 
             try {
-                await fetch(`${API_BASE}/ngo/chat/send`, {
+                await fetch(`${API}/ngo/chat/send`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1496,7 +1496,7 @@ import { API_BASE } from '../js/apiConfig.js';
         async function fetchDirectory() {
             try {
                 const listDiv = document.getElementById('ngo-directory-list');
-                const res = await fetch(`${API_BASE}/ngo/directory`);
+                const res = await fetch(`${API}/ngo/directory`);
                 const ngos = await res.json();
 
                 if (ngos.length === 0) {
@@ -1533,7 +1533,7 @@ import { API_BASE } from '../js/apiConfig.js';
         async function requestChatSummary(issueId) {
             try {
                 // Re-use system alerts for quick AI Summary popups
-                const res = await fetch(`${API_BASE}/ngo/chat/summary/${issueId}`);
+                const res = await fetch(`${API}/ngo/chat/summary/${issueId}`);
                 const data = await res.json();
 
                 const container = document.getElementById('system-alerts');
@@ -1562,7 +1562,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function generateTeamFormation(issueId) {
             try {
-                const res = await fetch(`${API_BASE}/ngo/collaboration/${issueId}`);
+                const res = await fetch(`${API}/ngo/collaboration/${issueId}`);
                 const data = await res.json();
 
                 // Populate system alert
@@ -1633,7 +1633,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchAIInsights() {
             try {
-                const res = await fetch(`${API_BASE}/operations/insights`);
+                const res = await fetch(`${API}/operations/insights`);
                 const data = await res.json();
                 document.getElementById('ai-insight-text').innerText = data.insight;
             } catch (e) {
@@ -1643,7 +1643,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchWorkQueue() {
             try {
-                const res = await fetch(`${API_BASE}/operations/workqueue`);
+                const res = await fetch(`${API}/operations/workqueue`);
                 const issues = await res.json();
                 const tbody = document.getElementById('work-queue-body');
 
@@ -1672,7 +1672,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchNGORegistry() {
             try {
-                const res = await fetch(`${API_BASE}/ngo/directory`);
+                const res = await fetch(`${API}/ngo/directory`);
                 const ngos = await res.json();
                 const grid = document.getElementById('ngo-registry-grid');
                 grid.innerHTML = ngos.map(ngo => `
@@ -1782,7 +1782,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchAuditLogs() {
             try {
-                const res = await fetch(`${API_BASE}/audit/logs`);
+                const res = await fetch(`${API}/audit/logs`);
                 const logs = await res.json();
                 const tbody = document.getElementById('audit-log-body');
                 tbody.innerHTML = logs.map(log => {
@@ -1804,7 +1804,7 @@ import { API_BASE } from '../js/apiConfig.js';
             spinner.classList.remove('hidden');
 
             try {
-                const res = await fetch(`${API_BASE}/reports/export`, { method: 'POST' });
+                const res = await fetch(`${API}/reports/export`, { method: 'POST' });
                 if (res.ok) {
                     const blob = await res.blob();
                     const url = window.URL.createObjectURL(blob);
@@ -1843,7 +1843,7 @@ import { API_BASE } from '../js/apiConfig.js';
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(`${API_BASE}/operations/search?q=${encodeURIComponent(q)}`);
+                    const res = await fetch(`${API}/operations/search?q=${encodeURIComponent(q)}`);
                     const data = await res.json();
 
                     resultsBox.innerHTML = '';

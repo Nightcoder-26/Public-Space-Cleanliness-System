@@ -284,6 +284,7 @@
     <script type="module">
         import { API_BASE } from '../js/apiConfig.js';
 
+        const API = API_BASE;
         let token = localStorage.getItem("token");
         let currentUser = null;
         let map = null;
@@ -315,7 +316,7 @@
 
         async function loadUser() {
             try {
-                const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { "Authorization": `Bearer ${token}` } });
+                const res = await fetch(`${API}/api/auth/me`, { headers: { "Authorization": `Bearer ${token}` } });
                 if (!res.ok) throw new Error("Unauthorized");
                 currentUser = await res.json();
                 document.getElementById('sidebarName').textContent = currentUser.name;
@@ -329,7 +330,7 @@
         // --- FEED LOGIC ---
         async function loadFeed() {
             try {
-                const res = await fetch(`${API_BASE}/api/community/posts`, { headers: { "Authorization": `Bearer ${token}` } });
+                const res = await fetch(`${API}/api/community/posts`, { headers: { "Authorization": `Bearer ${token}` } });
                 const data = await res.json();
                 if (data.success) {
                     allPosts = data.posts;
@@ -510,7 +511,7 @@
             }
 
             try {
-                const res = await fetch(`${API_BASE}/api/community/create-post`, {
+                const res = await fetch(`${API}/api/community/create-post`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(payload)
@@ -551,7 +552,7 @@
             const newDesc = prompt("Edit your post description:", post.description);
             if (newDesc !== null && newDesc.trim() !== '') {
                 try {
-                    const res = await fetch(`${API_BASE}/api/community/posts/${postId}`, {
+                    const res = await fetch(`${API}/api/community/posts/${postId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
                         body: JSON.stringify({ description: newDesc.trim() })
@@ -576,7 +577,7 @@
         async function deletePost(postId) {
             if (!confirm("Are you sure you want to delete this post?")) return;
             try {
-                const res = await fetch(`${API_BASE}/api/community/posts/${postId}`, {
+                const res = await fetch(`${API}/api/community/posts/${postId}`, {
                     method: 'DELETE',
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -598,7 +599,7 @@
         // --- SOCIAL LOGIC ---
         async function toggleLike(postId) {
             try {
-                const res = await fetch(`${API_BASE}/api/community/posts/${postId}/like`, { method: 'POST', headers: { "Authorization": `Bearer ${token}` } });
+                const res = await fetch(`${API}/api/community/posts/${postId}/like`, { method: 'POST', headers: { "Authorization": `Bearer ${token}` } });
                 // Socket UI update handles the rest
             } catch (e) { console.error('Like error', e); }
         }
@@ -613,7 +614,7 @@
             const list = document.getElementById(`comments-list-${postId}`);
             list.innerHTML = `<p class="text-[10px] text-center text-gray-500">Loading...</p>`;
             try {
-                const res = await fetch(`${API_BASE}/api/community/posts/${postId}/comments`, { headers: { "Authorization": `Bearer ${token}` } });
+                const res = await fetch(`${API}/api/community/posts/${postId}/comments`, { headers: { "Authorization": `Bearer ${token}` } });
                 const data = await res.json();
                 if (data.success) {
                     if (data.comments.length === 0) { list.innerHTML = `<p class="text-[10px] text-center text-gray-500">No comments yet.</p>`; return; }
@@ -634,7 +635,7 @@
             const input = document.getElementById(`comment-input-${postId}`);
             const text = input.value; input.value = '';
             try {
-                await fetch(`${API_BASE}/api/community/posts/${postId}/comment`, {
+                await fetch(`${API}/api/community/posts/${postId}/comment`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ text })
                 });
@@ -644,7 +645,7 @@
         // --- TRENDING & NEARBY ---
         async function loadTrending() {
             try {
-                const res = await fetch(`${API_BASE}/api/community/trending`, { headers: { "Authorization": `Bearer ${token}` } });
+                const res = await fetch(`${API}/api/community/trending`, { headers: { "Authorization": `Bearer ${token}` } });
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('trendingTags').innerHTML = data.trending.map(t =>
@@ -682,7 +683,7 @@
 
         async function fetchNearbyIssues(lat, lng) {
             try {
-                const res = await fetch(`${API_BASE}/api/community/nearby?lat=${lat}&lng=${lng}`, { headers: { "Authorization": `Bearer ${token}` } });
+                const res = await fetch(`${API}/api/community/nearby?lat=${lat}&lng=${lng}`, { headers: { "Authorization": `Bearer ${token}` } });
                 const data = await res.json();
                 if (data.success && data.nearby.length > 0) {
                     document.getElementById('nearbyList').innerHTML = data.nearby.map(i => `
@@ -701,7 +702,7 @@
         function initSocket() {
             try {
                 if (typeof io === 'undefined') return;
-                const socket = io(API_BASE);
+                const socket = io(API);
 
                 // Feature 5 Real-time feed injection
                 socket.on('new-community-post', (post) => {

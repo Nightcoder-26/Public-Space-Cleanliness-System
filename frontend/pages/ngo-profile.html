@@ -487,7 +487,7 @@
     <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
 
-        const API_BASE = `${API_BASE}/api`;
+        const API = `${API_BASE}/api`;
         let map;
         let currentUser = null;
         let currentNgoProfile = null;
@@ -502,7 +502,7 @@ import { API_BASE } from '../js/apiConfig.js';
             // Auto-route to own NGO profile if missing ID but logged in as Authority/NGO
             if (!queriedId && currentUser && currentUser.role === 'authority') {
                 try {
-                    const res = await fetch(`${API_BASE}/ngo/me`, {
+                    const res = await fetch(`${API}/ngo/me`, {
                         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                     });
                     if (res.ok) {
@@ -534,7 +534,7 @@ import { API_BASE } from '../js/apiConfig.js';
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return;
-                const res = await fetch(`${API_BASE}/auth/me`, {
+                const res = await fetch(`${API}/auth/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -547,7 +547,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         function initSocket(ngoId) {
             try {
-                socket = io(API_BASE, { transports: ['websocket', 'polling'] });
+                socket = io(API, { transports: ['websocket', 'polling'] });
                 // We could listen to specific events if implemented on the backend.
                 // Assuming global 'case_assigned' or similar. 
                 // We'll simulate refresh if we see a relevant message
@@ -566,7 +566,7 @@ import { API_BASE } from '../js/apiConfig.js';
         async function initProfile(id, silent = false) {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`${API_BASE}/ngo/${id}`, {
+                const res = await fetch(`${API}/ngo/${id}`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 });
                 const data = await res.json();
@@ -862,7 +862,7 @@ import { API_BASE } from '../js/apiConfig.js';
             };
 
             try {
-                const res = await fetch(`${API_BASE}/ngo/${currentNgoProfile._id}/update`, {
+                const res = await fetch(`${API}/ngo/${currentNgoProfile._id}/update`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

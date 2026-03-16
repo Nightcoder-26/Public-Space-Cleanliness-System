@@ -132,7 +132,7 @@
 <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
 
-    const API_BASE = `${API_BASE}/api`;
+    const API = `${API_BASE}/api`;
 
     // ─ Report Card Template
     function createReportCard(title, description, date, icon, color, tags) {
@@ -193,7 +193,7 @@ import { API_BASE } from '../js/apiConfig.js';
     // ─ Fetch Overview KPIs
     async function fetchKPIs() {
         try {
-            const res = await fetch(`${API_BASE}/impact/overview`);
+            const res = await fetch(`${API}/impact/overview`);
             const data = await res.json();
             document.getElementById('statCarbonOffset').textContent = (data.carbonMitigation / 1000).toFixed(1) + 'K MT';
             document.getElementById('statNGOs').textContent = data.activePartnerships || '—';
@@ -230,7 +230,7 @@ import { API_BASE } from '../js/apiConfig.js';
         btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Generating…';
         btn.disabled = true;
 
-        fetch(`${API_BASE}/reports/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reportName }) })
+        fetch(`${API}/reports/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reportName }) })
             .then(res => {
                 if (!res.ok) throw new Error();
                 return res.blob();
@@ -270,7 +270,7 @@ import { API_BASE } from '../js/apiConfig.js';
         btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Fetching…';
         btn.disabled = true;
 
-        fetch(`${API_BASE}/impact/overview`)
+        fetch(`${API}/impact/overview`)
             .then(r => r.json())
             .then(data => {
                 const blob = new Blob([JSON.stringify({ exportedAt: new Date(), ...data }, null, 2)], { type: 'application/json' });

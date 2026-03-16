@@ -228,7 +228,7 @@
 <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
 
-    const API_BASE = `${API_BASE}/api`;
+    const API = `${API_BASE}/api`;
 
     // ─ Update timestamp
     document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -236,7 +236,7 @@ import { API_BASE } from '../js/apiConfig.js';
     // ─ Overview KPIs
     async function fetchKPIs() {
         try {
-            const res = await fetch(`${API_BASE}/impact/overview`);
+            const res = await fetch(`${API}/impact/overview`);
             const data = await res.json();
             document.getElementById('kpiPolicies').textContent = '48';
             document.getElementById('kpiCO2').textContent = (data.carbonMitigation / 1000).toFixed(1) + 'K';
@@ -313,7 +313,7 @@ import { API_BASE } from '../js/apiConfig.js';
     // ─ AI Insights
     async function fetchAIInsights() {
         try {
-            const res = await fetch(`${API_BASE}/ai/impact-insights`);
+            const res = await fetch(`${API}/ai/impact-insights`);
             const data = await res.json();
 
             const insightsBox = document.getElementById('aiInsightsContainer');
@@ -359,7 +359,7 @@ import { API_BASE } from '../js/apiConfig.js';
     }
 
     // ─ Socket.io
-    const socket = io(API_BASE);
+    const socket = io(API);
     socket.on('issue_update', () => fetchKPIs());
 
     // ─ Boot

@@ -501,8 +501,8 @@
     <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
 
-        const API_BASE = `${API_BASE}/api`;
-        const socket = io(API_BASE);
+        const API = `${API_BASE}/api`;
+        const socket = io(API);
 
         socket.on("issue_update", () => {
             fetchOverview();
@@ -524,7 +524,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchOverview() {
             try {
-                const res = await fetch(`${API_BASE}/impact/overview`);
+                const res = await fetch(`${API}/impact/overview`);
                 const data = await res.json();
 
                 const carbonEl = document.getElementById('valCarbon');
@@ -541,7 +541,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         document.getElementById('exportDatasetBtn').addEventListener('click', async () => {
             try {
-                const res = await fetch(`${API_BASE}/impact/overview`);
+                const res = await fetch(`${API}/impact/overview`);
                 const data = await res.json();
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -573,7 +573,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function loadHeatmap() {
             try {
-                const res = await fetch(`${API_BASE}/operations/geo`);
+                const res = await fetch(`${API}/operations/geo`);
                 const data = await res.json();
 
                 // Convert to Leaflet Heat format: [lat, lng, intensity]
@@ -607,7 +607,7 @@ import { API_BASE } from '../js/apiConfig.js';
                     }).addTo(impactMap).bindPopup("<b>You are here</b><br>Active surveillance node");
 
                     try {
-                        const res = await fetch(`${API_BASE}/operations/reverse-geocode?lat=${lat}&lng=${lng}`);
+                        const res = await fetch(`${API}/operations/reverse-geocode?lat=${lat}&lng=${lng}`);
                         const locData = await res.json();
                         document.getElementById('userLocation').innerText = `${locData.city}, ${locData.state}`;
                     } catch (e) {
@@ -623,7 +623,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchImpactInsights() {
             try {
-                const res = await fetch(`${API_BASE}/ai/impact-insights`);
+                const res = await fetch(`${API}/ai/impact-insights`);
                 const data = await res.json();
                 
                 // Populate Policy Trends
@@ -681,7 +681,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function initCO2Chart() {
             try {
-                const res = await fetch(`${API_BASE}/impact/carbon/history`);
+                const res = await fetch(`${API}/impact/carbon/history`);
                 const data = await res.json();
 
                 const ctx = document.getElementById('co2Chart').getContext('2d');
@@ -726,7 +726,7 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchProjectImpact() {
             try {
-                const res = await fetch(`${API_BASE}/project/impact`);
+                const res = await fetch(`${API}/project/impact`);
                 const projects = await res.json();
 
                 const tableBody = document.getElementById('projectImpactTable');
