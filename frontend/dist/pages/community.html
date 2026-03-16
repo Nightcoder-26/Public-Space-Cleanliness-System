@@ -282,9 +282,8 @@
         </main>
     </div>
     <script type="module">
-import { API_BASE } from '../js/apiConfig.js';
+        import { API_BASE } from '../js/apiConfig.js';
 
-        const API_BASE = API_BASE;
         let token = localStorage.getItem("token");
         let currentUser = null;
         let map = null;
@@ -438,7 +437,7 @@ import { API_BASE } from '../js/apiConfig.js';
                         let { width, height } = img;
                         if (width > maxPx || height > maxPx) {
                             if (width > height) { height = Math.round(height * maxPx / width); width = maxPx; }
-                            else                { width = Math.round(width * maxPx / height); height = maxPx; }
+                            else { width = Math.round(width * maxPx / height); height = maxPx; }
                         }
                         const canvas = document.createElement('canvas');
                         canvas.width = width; canvas.height = height;
@@ -476,10 +475,10 @@ import { API_BASE } from '../js/apiConfig.js';
             btn.disabled = true; spinner.classList.remove('hidden');
 
             const payload = {
-                title:       document.getElementById('postTitle').value.trim(),
+                title: document.getElementById('postTitle').value.trim(),
                 description: document.getElementById('postDesc').value.trim(),
-                category:    document.getElementById('postCat').value,
-                location:    document.getElementById('postLoc').value.trim()
+                category: document.getElementById('postCat').value,
+                location: document.getElementById('postLoc').value.trim()
             };
 
             if (!payload.description) {
@@ -504,10 +503,10 @@ import { API_BASE } from '../js/apiConfig.js';
                 try {
                     const pos = await new Promise((res, rej) =>
                         navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
-                    payload.latitude  = pos.coords.latitude;
+                    payload.latitude = pos.coords.latitude;
                     payload.longitude = pos.coords.longitude;
-                    payload.location  = `Lat: ${pos.coords.latitude.toFixed(2)}, Lng: ${pos.coords.longitude.toFixed(2)}`;
-                } catch (_) {} // silently skip if denied
+                    payload.location = `Lat: ${pos.coords.latitude.toFixed(2)}, Lng: ${pos.coords.longitude.toFixed(2)}`;
+                } catch (_) { } // silently skip if denied
             }
 
             try {
@@ -748,26 +747,26 @@ import { API_BASE } from '../js/apiConfig.js';
                 });
             } catch (e) { console.error('Socket init err', e); }
         }
-    
-window.loadUser = loadUser;
-window.loadFeed = loadFeed;
-window.renderFeed = renderFeed;
-window.createPostHTML = createPostHTML;
-window.compressImage = compressImage;
-window.showPostStatus = showPostStatus;
-window.createPost = createPost;
-window.editPostPrompt = editPostPrompt;
-window.deletePost = deletePost;
-window.toggleLike = toggleLike;
-window.toggleComments = toggleComments;
-window.loadComments = loadComments;
-window.postComment = postComment;
-window.loadTrending = loadTrending;
-window.initMap = initMap;
-window.plotPostsOnMap = plotPostsOnMap;
-window.fetchNearbyIssues = fetchNearbyIssues;
-window.initSocket = initSocket;
-</script>
+
+        window.loadUser = loadUser;
+        window.loadFeed = loadFeed;
+        window.renderFeed = renderFeed;
+        window.createPostHTML = createPostHTML;
+        window.compressImage = compressImage;
+        window.showPostStatus = showPostStatus;
+        window.createPost = createPost;
+        window.editPostPrompt = editPostPrompt;
+        window.deletePost = deletePost;
+        window.toggleLike = toggleLike;
+        window.toggleComments = toggleComments;
+        window.loadComments = loadComments;
+        window.postComment = postComment;
+        window.loadTrending = loadTrending;
+        window.initMap = initMap;
+        window.plotPostsOnMap = plotPostsOnMap;
+        window.fetchNearbyIssues = fetchNearbyIssues;
+        window.initSocket = initSocket;
+    </script>
 </body>
 
 </html>
