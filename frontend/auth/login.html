@@ -306,10 +306,10 @@
             if (authMode === "signup") {
                 bodyArgs.name = name;
             }
+            console.log(API_BASE);
 
             try {
-                const API_BASE = API_BASE;
-
+                
                 const response = await fetch(API_BASE + endpoint, {
                     method: "POST",
                     headers: {
@@ -332,7 +332,9 @@
                     alert(data.message || "An error occurred");
                 }
             } catch (err) {
-                alert("Server connection failed. Make sure backend is running.");
+                // alert("Server connection failed. Make sure backend is running.");
+                console.log(err);
+                
             }
         });
 
