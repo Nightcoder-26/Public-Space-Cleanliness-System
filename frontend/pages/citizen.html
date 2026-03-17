@@ -205,7 +205,7 @@
     </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white transition-colors duration-200">
+<body class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white transition-colors duration-200 overflow-x-hidden">
     <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
 
         <!-- HEADER (shared component) -->
@@ -293,8 +293,8 @@
                     <!-- Profile Card -->
                     <div id="profileView"
                         class="lg:col-span-8 bg-white dark:bg-white/5 rounded-xl border border-[#dbe6df] dark:border-white/10 p-6 flex flex-col gap-4">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div class="flex gap-5 items-center">
+                        <div class="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 text-center sm:text-left w-full">
+                            <div class="flex flex-col sm:flex-row gap-5 items-center w-full">
                                 <div class="bg-center bg-no-repeat bg-cover rounded-full size-20 border-4 border-primary/30 shrink-0"
                                     style='background-image:url("https://i.pravatar.cc/150?img=3");'></div>
                                 <div>
@@ -320,7 +320,7 @@
                                 </div>
                             </div>
                             <button id="editProfileBtn"
-                                class="px-4 py-2 bg-background-light dark:bg-white/10 rounded-lg text-sm font-bold border border-[#dbe6df] dark:border-white/10 hover:bg-primary hover:text-[#111813] transition-all">Edit
+                                class="px-4 py-2 w-full sm:w-auto bg-background-light dark:bg-white/10 rounded-lg text-sm font-bold border border-[#dbe6df] dark:border-white/10 hover:bg-primary hover:text-[#111813] transition-all">Edit
                                 Profile</button>
                         </div>
                     </div>
@@ -530,24 +530,7 @@
             </div><!-- /main content -->
         </main>
 
-        <!-- MOBILE BOTTOM NAV -->
-        <footer
-            class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-[#dbe6df] dark:border-white/10 px-6 py-3 flex justify-between items-center z-50">
-            <a href="citizen.html" class="flex flex-col items-center gap-1 text-primary"><span
-                    class="material-symbols-outlined">grid_view</span><span
-                    class="text-[10px] font-bold">Home</span></a>
-            <a href="impact.html" class="flex flex-col items-center gap-1 text-[#61896f]"><span
-                    class="material-symbols-outlined">analytics</span><span
-                    class="text-[10px] font-bold">Impact</span></a>
-            <button onclick="openReportModal()"
-                class="size-12 -mt-8 rounded-full bg-primary text-[#111813] flex items-center justify-center shadow-lg border-4 border-white dark:border-background-dark"><span
-                    class="material-symbols-outlined">add</span></button>
-            <a href="#issueMap" class="flex flex-col items-center gap-1 text-[#61896f]"><span
-                    class="material-symbols-outlined">map</span><span class="text-[10px] font-bold">Map</span></a>
-            <button onclick="doLogout()" class="flex flex-col items-center gap-1 text-red-500"><span
-                    class="material-symbols-outlined">logout</span><span
-                    class="text-[10px] font-bold">Logout</span></button>
-        </footer>
+        <!-- MOBILE BOTTOM NAV removed; served by header.js -->
 
         <!-- REPORT ISSUE MODAL -->
         <div id="reportModal"
