@@ -75,24 +75,35 @@ exports.createIssue = async (req, res) => {
 
         const savedIssue = await newIssue.save();
 
-        // 5. Award points + XP + CO2
-        await User.findByIdAndUpdate(req.user._id, {
-            $inc: {
-                points,
-                totalPointsEarned: points,
-                xp: xpGain,
-                co2Saved: co2Gain
-            }
-        });
-
-        // 6. Level up check
-        const updatedUser = await User.findById(req.user._id);
-        if (updatedUser.xp >= updatedUser.level * 500) {
-            await User.findByIdAndUpdate(req.user._id, {
-                $inc: { level: 1 },
-                $set: { xp: 0 }
-            });
-        }
+        // 5+6. Award points/XP/CO2 and level-up in ONE atomic operation
+        // Avoids two sequential DB round-trips (findByIdAndUpdate + findById)
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            [
+                {
+                    $set: {
+                        points:           { $add: ['$points', points] },
+                        totalPointsEarned:{ $add: ['$totalPointsEarned', points] },
+                        xp:  {
+                            $cond: [
+                                { $gte: [{ $add: ['$xp', xpGain] }, { $multiply: ['$level', 500] }] },
+                                0,
+                                { $add: ['$xp', xpGain] }
+                            ]
+                        },
+                        level: {
+                            $cond: [
+                                { $gte: [{ $add: ['$xp', xpGain] }, { $multiply: ['$level', 500] }] },
+                                { $add: ['$level', 1] },
+                                '$level'
+                            ]
+                        },
+                        co2Saved: { $add: ['$co2Saved', co2Gain] }
+                    }
+                }
+            ],
+            { new: true }
+        );
 
         // 7. Log point transaction
         await PointTransaction.create({
@@ -186,7 +197,13 @@ exports.createIssue = async (req, res) => {
 // GET /api/issues — all issues (authority view)
 exports.getIssues = async (req, res) => {
     try {
-        const issues = await Issue.find().populate('userId', 'name').sort({ dateReported: -1 });
+        const issues = await Issue
+            .find()
+            .select('title category severity status location latitude longitude dateReported userId assignedAuthority priorityLevel')
+            .populate('userId', 'name')
+            .sort({ dateReported: -1 })
+            .limit(200)
+            .lean();
         res.status(200).json(issues);
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving issues' });

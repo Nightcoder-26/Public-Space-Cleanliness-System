@@ -1,52 +1,63 @@
 const CommunityPost = require('../models/CommunityPost');
 const Comment = require('../models/Comment');
 const Issue = require('../models/Issue');
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Heuristic Moderation
 const flagBadWords = (text) => {
     const badWords = ['spam', 'fake', 'idiot', 'scam', 'hate'];
-    const lowerText = text.toLowerCase();
-    return badWords.some(word => lowerText.includes(word));
+    return badWords.some(word => text.toLowerCase().includes(word));
 };
 
-// Heuristic Image Labeling (simulating CV)
 const predictImageLabel = (desc) => {
-    const lowerDesc = desc.toLowerCase();
-    if (lowerDesc.includes('trash') || lowerDesc.includes('garbage')) return 'Garbage Dump — 95% confidence';
-    if (lowerDesc.includes('pothole') || lowerDesc.includes('road')) return 'Road Damage — 92% confidence';
-    if (lowerDesc.includes('leak') || lowerDesc.includes('water')) return 'Water Leak — 88% confidence';
-    if (lowerDesc.includes('tree') || lowerDesc.includes('plant')) return 'Greening/Planting — 98% confidence';
+    const d = desc.toLowerCase();
+    if (d.includes('trash') || d.includes('garbage')) return 'Garbage Dump — 95% confidence';
+    if (d.includes('pothole') || d.includes('road')) return 'Road Damage — 92% confidence';
+    if (d.includes('leak') || d.includes('water')) return 'Water Leak — 88% confidence';
+    if (d.includes('tree') || d.includes('plant')) return 'Greening/Planting — 98% confidence';
     return '';
 };
 
-// Generate summary for long posts
 const generateSummary = (desc) => {
     if (!desc || desc.length <= 120) return '';
     return '📝 AI Preview: ' + desc.substring(0, 117) + '...';
 };
 
-// 1. Get Feed
+// -----------------------------------------------------------------------
+// 1. Get Feed — paginated, .lean(), field-projected
+//    BEFORE: CommunityPost.find().populate(...).sort(...).limit(50)
+//    AFTER:  paginated (page/limit), .lean(), only required fields selected
+// -----------------------------------------------------------------------
 exports.getPosts = async (req, res) => {
     try {
-        const posts = await CommunityPost.find()
+        const page  = Math.max(parseInt(req.query.page)  || 1, 1);
+        const limit = Math.min(parseInt(req.query.limit) || 20, 50); // max 50
+        const skip  = (page - 1) * limit;
+
+        const posts = await CommunityPost
+            .find()
+            .select('userId postType title description imageUrl location latitude longitude category likes commentCount aiLabel aiSummary flagged createdAt')
             .populate('userId', 'name level xp')
             .sort({ createdAt: -1 })
-            .limit(50);
-        res.json({ success: true, posts });
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        res.json({ success: true, posts, page, limit });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server error fetching posts' });
     }
 };
 
+// -----------------------------------------------------------------------
 // 2. Create Post
+// -----------------------------------------------------------------------
 exports.createPost = async (req, res) => {
     try {
         const { title, description, imageUrl, location, latitude, longitude, category } = req.body;
 
-        const flagged = flagBadWords(description || '');
-        const aiLabel = imageUrl ? predictImageLabel(description) : '';
+        const flagged   = flagBadWords(description || '');
+        const aiLabel   = imageUrl ? predictImageLabel(description) : '';
         const aiSummary = generateSummary(description);
 
         const post = new CommunityPost({
@@ -67,7 +78,6 @@ exports.createPost = async (req, res) => {
         await post.save();
         await post.populate('userId', 'name level xp');
 
-        // Emit socket event if io is available
         if (req.app.locals.io) {
             req.app.locals.io.emit('new-community-post', post);
         }
@@ -79,17 +89,21 @@ exports.createPost = async (req, res) => {
     }
 };
 
+// -----------------------------------------------------------------------
 // 3. Like Post
+// -----------------------------------------------------------------------
 exports.likePost = async (req, res) => {
     try {
-        const post = await CommunityPost.findById(req.params.id);
+        const post = await CommunityPost.findById(req.params.id).select('likes userId');
         if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
 
-        const index = post.likes.indexOf(req.user._id);
+        const uid = req.user._id.toString ? req.user._id.toString() : String(req.user._id);
+        const index = post.likes.findIndex(id => id.toString() === uid);
+
         if (index === -1) {
-            post.likes.push(req.user._id); // Like
+            post.likes.push(req.user._id);
         } else {
-            post.likes.splice(index, 1); // Unlike
+            post.likes.splice(index, 1);
         }
 
         await post.save();
@@ -105,29 +119,32 @@ exports.likePost = async (req, res) => {
     }
 };
 
+// -----------------------------------------------------------------------
 // 4. Add Comment
+// -----------------------------------------------------------------------
 exports.addComment = async (req, res) => {
     try {
         const { text } = req.body;
         if (!text) return res.status(400).json({ success: false, message: 'Comment text required' });
 
-        const post = await CommunityPost.findById(req.params.id);
+        // Use findByIdAndUpdate for atomic increment — avoids a full post fetch + save
+        const post = await CommunityPost.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { commentCount: 1 } },
+            { new: false, select: '_id' }
+        ).lean();
+
         if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
 
-        const comment = new Comment({
-            postId: post._id,
-            userId: req.user._id,
-            text
-        });
-
+        const comment = new Comment({ postId: post._id, userId: req.user._id, text });
         await comment.save();
         await comment.populate('userId', 'name');
 
-        post.commentCount += 1;
-        await post.save();
-
         if (req.app.locals.io) {
-            req.app.locals.io.emit('post-commented', { postId: post._id, commentCount: post.commentCount, newComment: comment });
+            req.app.locals.io.emit('post-commented', {
+                postId: post._id,
+                newComment: comment
+            });
         }
 
         res.status(201).json({ success: true, comment });
@@ -137,12 +154,17 @@ exports.addComment = async (req, res) => {
     }
 };
 
-// 5. Get Comments for a Post
+// -----------------------------------------------------------------------
+// 5. Get Comments
+// -----------------------------------------------------------------------
 exports.getComments = async (req, res) => {
     try {
-        const comments = await Comment.find({ postId: req.params.id })
+        const comments = await Comment
+            .find({ postId: req.params.id })
+            .select('userId text createdAt')
             .populate('userId', 'name')
-            .sort({ createdAt: 1 });
+            .sort({ createdAt: 1 })
+            .lean();
         res.json({ success: true, comments });
     } catch (error) {
         console.error(error);
@@ -150,7 +172,12 @@ exports.getComments = async (req, res) => {
     }
 };
 
+// -----------------------------------------------------------------------
 // 6. Get Nearby Issues
+//    BEFORE: loads ALL unresolved issues, filters with JS Haversine
+//    AFTER:  MongoDB bounding-box pre-filter (~5 km box) then JS Haversine
+//            on the small result set only
+// -----------------------------------------------------------------------
 exports.getNearby = async (req, res) => {
     try {
         const { lat, lng } = req.query;
@@ -158,28 +185,35 @@ exports.getNearby = async (req, res) => {
 
         const latNum = parseFloat(lat);
         const lngNum = parseFloat(lng);
+        const KM_RADIUS = 5.0;
 
-        // Simple bounding box approach or all issues if small DB
-        const issues = await Issue.find({ status: { $ne: 'Resolved' } });
+        // ~1 degree of latitude ≈ 111 km  →  5 km ≈ 0.045 degrees
+        const LAT_DELTA = KM_RADIUS / 111;
+        const LNG_DELTA = KM_RADIUS / (111 * Math.cos(latNum * Math.PI / 180));
 
-        // Haversine
-        const R = 6371; // km
+        // Pre-filter with bounding box in MongoDB (uses the lat/lng index)
+        const issues = await Issue.find({
+            status: { $ne: 'Resolved' },
+            latitude:  { $gte: latNum - LAT_DELTA, $lte: latNum + LAT_DELTA },
+            longitude: { $gte: lngNum - LNG_DELTA, $lte: lngNum + LNG_DELTA }
+        })
+        .select('category location latitude longitude')
+        .lean();
+
+        // Precise Haversine on the small subset
+        const R = 6371;
         const nearby = issues.map(iss => {
-            if (!iss.latitude || !iss.longitude) return null;
-            const dLat = (iss.latitude - latNum) * Math.PI / 180;
+            const dLat = (iss.latitude  - latNum) * Math.PI / 180;
             const dLon = (iss.longitude - lngNum) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            const a = Math.sin(dLat / 2) ** 2 +
                 Math.cos(latNum * Math.PI / 180) * Math.cos(iss.latitude * Math.PI / 180) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = R * c;
-
-            return {
-                issue: iss.category,
-                location: iss.location,
-                distance: parseFloat(distance.toFixed(1))
-            };
-        }).filter(item => item && item.distance <= 5.0).sort((a, b) => a.distance - b.distance).slice(0, 5); // Max 5 km, top 5
+                Math.sin(dLon / 2) ** 2;
+            const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return { issue: iss.category, location: iss.location, distance: parseFloat(distance.toFixed(1)) };
+        })
+        .filter(i => i.distance <= KM_RADIUS)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 5);
 
         res.json({ success: true, nearby });
     } catch (error) {
@@ -188,24 +222,29 @@ exports.getNearby = async (req, res) => {
     }
 };
 
-// 7. Get Trending Hashes
+// -----------------------------------------------------------------------
+// 7. Get Trending
+//    BEFORE: finds({}).limit(100) — fetches ALL fields of 100 posts
+//    AFTER:  .select('description').lean() — only description strings
+// -----------------------------------------------------------------------
 exports.getTrending = async (req, res) => {
     try {
-        // Mocking trending tags based on recent posts
-        const posts = await CommunityPost.find().sort({ createdAt: -1 }).limit(100);
+        const posts = await CommunityPost
+            .find()
+            .select('description')       // 🚀 only the field we read
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .lean();
+
         const tags = {};
         posts.forEach(p => {
-            if (!p.description) return;
-            const words = p.description.match(/#[a-zA-Z0-9]+/g);
-            if (words) {
-                words.forEach(w => { tags[w] = (tags[w] || 0) + 1; });
-            }
+            const words = p.description ? p.description.match(/#[a-zA-Z0-9]+/g) : null;
+            if (words) words.forEach(w => { tags[w] = (tags[w] || 0) + 1; });
         });
 
         let sortedTags = Object.entries(tags).sort((a, b) => b[1] - a[1]).map(e => e[0]);
-        if (sortedTags.length === 0) {
-            sortedTags = ['#CleanCity', '#EcoAction', '#CommunitySafety'];
-        }
+        if (!sortedTags.length) sortedTags = ['#CleanCity', '#EcoAction', '#CommunitySafety'];
+
         res.json({ success: true, trending: sortedTags.slice(0, 5) });
     } catch (error) {
         console.error(error);
@@ -213,35 +252,36 @@ exports.getTrending = async (req, res) => {
     }
 };
 
+// -----------------------------------------------------------------------
 // 8. Edit Post
+// -----------------------------------------------------------------------
 exports.editPost = async (req, res) => {
     try {
         const { title, description, category, location, imageUrl } = req.body;
         const post = await CommunityPost.findById(req.params.id);
 
         if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
-        if (post.userId.toString() !== req.user._id.toString()) {
+        const ownerId = post.userId.toString ? post.userId.toString() : String(post.userId);
+        const reqId   = req.user._id        ? String(req.user._id) : String(req.user.id);
+        if (ownerId !== reqId) {
             return res.status(403).json({ success: false, message: 'Not authorized to edit this post' });
         }
 
-        // Apply moderation/AI to new description if changed
         if (description) {
-            post.flagged = flagBadWords(description);
+            post.flagged   = flagBadWords(description);
             post.aiSummary = generateSummary(description);
         }
-        
-        post.title = title || post.title;
+
+        post.title       = title       || post.title;
         post.description = description || post.description;
-        post.category = category || post.category;
-        post.location = location || post.location;
-        if (imageUrl) post.imageUrl = imageUrl; 
+        post.category    = category    || post.category;
+        post.location    = location    || post.location;
+        if (imageUrl) post.imageUrl = imageUrl;
 
         await post.save();
         await post.populate('userId', 'name level xp');
 
-        if (req.app.locals.io) {
-            req.app.locals.io.emit('post-updated', post);
-        }
+        if (req.app.locals.io) req.app.locals.io.emit('post-updated', post);
 
         res.json({ success: true, post });
     } catch (error) {
@@ -250,22 +290,27 @@ exports.editPost = async (req, res) => {
     }
 };
 
+// -----------------------------------------------------------------------
 // 9. Delete Post
+// -----------------------------------------------------------------------
 exports.deletePost = async (req, res) => {
     try {
-        const post = await CommunityPost.findById(req.params.id);
-
+        const post = await CommunityPost.findById(req.params.id).select('userId');
         if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
-        if (post.userId.toString() !== req.user._id.toString()) {
+
+        const ownerId = post.userId.toString ? post.userId.toString() : String(post.userId);
+        const reqId   = req.user._id         ? String(req.user._id)   : String(req.user.id);
+        if (ownerId !== reqId) {
             return res.status(403).json({ success: false, message: 'Not authorized to delete this post' });
         }
 
-        await post.deleteOne();
-        await Comment.deleteMany({ postId: post._id }); // cleanup comments
+        // Run both delete ops in parallel
+        await Promise.all([
+            post.deleteOne(),
+            Comment.deleteMany({ postId: post._id })
+        ]);
 
-        if (req.app.locals.io) {
-            req.app.locals.io.emit('post-deleted', { postId: post._id });
-        }
+        if (req.app.locals.io) req.app.locals.io.emit('post-deleted', { postId: post._id });
 
         res.json({ success: true, message: 'Post deleted' });
     } catch (error) {

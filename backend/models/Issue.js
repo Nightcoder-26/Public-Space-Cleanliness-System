@@ -61,4 +61,12 @@ const IssueSchema = new mongoose.Schema({
     upvotes: { type: Number, default: 0 }
 }, { timestamps: true });
 
+// --- Performance Indexes ---
+// Speed up per-user issue queries (citizen dashboard)
+IssueSchema.index({ userId: 1, dateReported: -1 });
+// Speed up authority/status-based filtering
+IssueSchema.index({ status: 1, dateReported: -1 });
+// Speed up geo-proximity queries (community nearby feature)
+IssueSchema.index({ latitude: 1, longitude: 1 });
+
 module.exports = mongoose.model('Issue', IssueSchema);

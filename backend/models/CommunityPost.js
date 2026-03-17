@@ -28,4 +28,10 @@ const CommunityPostSchema = new mongoose.Schema({
     sourceIssueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Issue', default: null }
 }, { timestamps: true });
 
+// --- Performance Indexes ---
+// Speed up feed queries sorted by newest first
+CommunityPostSchema.index({ createdAt: -1 });
+// Speed up per-user post lookups
+CommunityPostSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model('CommunityPost', CommunityPostSchema);
