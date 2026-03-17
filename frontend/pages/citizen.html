@@ -1289,8 +1289,8 @@ import { getSocket } from '../js/socket.js';
                 btn.disabled = true;
                 btnTxt.textContent = 'Submitting…';
 
-                // ── Image compression via canvas (max 800px, 0.75 quality JPEG) ──────
-                function compressImage(file, maxPx = 800, quality = 0.75) {
+                // ── Image compression via canvas (max 400px, 0.5 quality JPEG) ──────
+                function compressImage(file, maxPx = 400, quality = 0.5) {
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
                         reader.onload = (ev) => {
@@ -1320,6 +1320,11 @@ import { getSocket } from '../js/socket.js';
                 if (photoInput.files && photoInput.files[0]) {
                     try {
                         imageUrl = await compressImage(photoInput.files[0]);
+                        // Safety guard: if base64 is still over 2MB, strip it to avoid server rejection
+                        if (imageUrl && imageUrl.length > 2 * 1024 * 1024) {
+                            console.warn('Compressed image still too large, submitting without image.');
+                            imageUrl = null;
+                        }
                     } catch (e) {
                         console.warn('Image compression failed, proceeding without image:', e);
                     }

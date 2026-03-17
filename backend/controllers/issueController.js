@@ -187,7 +187,13 @@ exports.createIssue = async (req, res) => {
     } catch (error) {
         if (!res.headersSent) {
             console.error('createIssue error:', error);
-            res.status(500).json({ message: 'Server error processing issue report', error: error.message });
+            const isDev = process.env.NODE_ENV !== 'production';
+            res.status(500).json({
+                message: isDev
+                    ? `Server error: ${error.message}`
+                    : 'Server error processing issue report',
+                error: error.message
+            });
         } else {
             console.error('createIssue error after response sent:', error);
         }
