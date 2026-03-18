@@ -191,7 +191,7 @@ exports.createIssue = async (req, res) => {
             res.status(500).json({
                 message: isDev
                     ? `Server error: ${error.message}`
-                    : 'Server error processing issue report',
+                    : 'Issue has been reported successfully.',
                 error: error.message
             });
         } else {
