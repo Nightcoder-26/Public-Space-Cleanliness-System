@@ -214,7 +214,7 @@
         </div>
     </div>
     <script type="module">
-import { API_BASE } from '../js/apiConfig.js';
+        import { API_BASE } from '../js/apiConfig.js';
 
         let selectedRole = "citizen";
         let authMode = "login"; // "login" or "signup"
@@ -306,10 +306,10 @@ import { API_BASE } from '../js/apiConfig.js';
             if (authMode === "signup") {
                 bodyArgs.name = name;
             }
+            console.log(API_BASE);
 
             try {
                 
-
                 const response = await fetch(API_BASE + endpoint, {
                     method: "POST",
                     headers: {
@@ -333,13 +333,15 @@ import { API_BASE } from '../js/apiConfig.js';
                 }
             } catch (err) {
                 alert("Server connection failed. Make sure backend is running.");
+                console.log(err);
+                
             }
         });
 
         // Google Identity Services (One Tap & Rendered Button)
         window.onload = function () {
             google.accounts.id.initialize({
-                client_id: "901123626139-ad8j1jtpevfahalk84q2tljesjrpdbme.apps.googleusercontent.com",
+                client_id: "544576440907-eabpf7g2s0an2u354t2qofo58ev33k9o.apps.googleusercontent.com",
                 callback: handleCredentialResponse
             });
 
@@ -378,11 +380,11 @@ import { API_BASE } from '../js/apiConfig.js';
                 alert("Apple Login failed. Make sure you have configured a valid App ID and Redirect URI.");
             }
         });
-    
-window.updateRoleUI = updateRoleUI;
-window.updateModeUI = updateModeUI;
-window.handleCredentialResponse = handleCredentialResponse;
-</script>
+
+        window.updateRoleUI = updateRoleUI;
+        window.updateModeUI = updateModeUI;
+        window.handleCredentialResponse = handleCredentialResponse;
+    </script>
 </body>
 
 </html>

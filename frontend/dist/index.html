@@ -90,7 +90,7 @@
 <body class="bg-[#fcfdfc] text-slate-900 font-sans antialiased overflow-x-hidden">
   <!-- BEGIN: Navigation -->
   <nav class="fixed top-0 w-full z-50 glass-nav h-20 flex items-center">
-    <div class="container mx-auto px-6 flex justify-between items-center">
+    <div class="container mx-auto px-4 md:px-6 flex justify-between items-center">
       <div class="flex items-center space-x-2" data-purpose="brand-logo">
         <div class="w-10 h-10 bg-brand rounded-xl flex items-center justify-center shadow-lg shadow-brand/20">
           <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"
@@ -111,7 +111,7 @@
       <div class="flex items-center space-x-4">
         <a class="text-sm font-semibold text-slate-700 hover:text-brand px-4 py-2 transition-colors"
           href="auth/login.html">Log In</a>
-        <a class="bg-brand hover:bg-brand-dark text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/20 active:scale-95 inline-block text-center"
+        <a class="bg-brand hover:bg-brand-dark text-white px-4 md:px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/20 active:scale-95 inline-block text-center"
           href="auth/login.html">Get Started</a>
       </div>
     </div>
@@ -122,7 +122,7 @@
     <!-- Decorative Blobs -->
     <div class="absolute top-20 -left-20 w-96 h-96 bg-brand/10 rounded-full blob-bg"></div>
     <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-brand/5 rounded-full blob-bg"></div>
-    <div class="container mx-auto px-6 relative z-10">
+    <div class="container mx-auto px-4 md:px-6 relative z-10">
       <div class="flex flex-col lg:flex-row items-center gap-16">
         <!-- Hero Text -->
         <div class="lg:w-1/2 text-center lg:text-left" data-aos="fade-right" data-aos-duration="1000">
@@ -140,12 +140,12 @@
           <p class="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl mx-auto lg:mx-0">
             A smart civic platform that empowers citizens to report unclean areas, enabling faster action from
             authorities and creating cleaner, healthier cities for everyone.
-          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-            <a class="w-full sm:w-auto px-8 py-4 bg-brand text-white font-bold rounded-2xl shadow-xl shadow-brand/30 hover:shadow-brand/40 hover:-translate-y-1 transition-all inline-block text-center"
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full">
+            <a class="w-full sm:w-auto px-6 py-4 bg-brand text-white font-bold rounded-2xl shadow-xl shadow-brand/30 hover:shadow-brand/40 transition-all inline-block text-center"
               href="auth/login.html?role=citizen">
               Enter Citizen Dashboard
             </a>
-            <a class="w-full sm:w-auto px-8 py-4 bg-white text-slate-900 border border-slate-200 font-bold rounded-2xl shadow-sm hover:bg-slate-50 transition-all inline-block text-center"
+            <a class="w-full sm:w-auto px-6 py-4 bg-white text-slate-900 border border-slate-200 font-bold rounded-2xl shadow-sm hover:bg-slate-50 transition-all inline-block text-center"
               href="auth/login.html?role=authority">
               Access Authority Console
             </a>
@@ -180,7 +180,7 @@
                 <img alt="Dashboard Map" class="w-full h-full object-cover opacity-50"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5MiAaK_xOV1uPR5Nsezg2qr1pboQn9N6sBSt_hVpkmvCU1Y6vSq3EeAqGNwYrQjbvZau6FFrWUYhrsuBL-8xXGfiAY3PaO4yS3Wa0J8xdP8S5LvYNXTt6zz2yyrLc7Il7_oBpiiwqhaWCC2fZ070rDYLajSh97VdflDhqU3dTkwlzqGTECmaIAFGPaHRLxqCk-ZdY1KRE78V-P27fMd_K50gNOsqPPCxRGOff-DYJFilxUy5tfnTtMMD8JDVPgNLHSryvIfoPKdo" />
                 <div class="absolute inset-0 flex items-center justify-center">
-                  <div class="w-full px-6 flex justify-around items-end space-x-2 h-24">
+                  <div class="w-full px-4 md:px-6 flex justify-around items-end space-x-2 h-24">
                     <div class="w-full bg-brand/40 rounded-t-md h-12"></div>
                     <div class="w-full bg-brand/60 rounded-t-md h-20"></div>
                     <div class="w-full bg-brand rounded-t-md h-24"></div>
@@ -213,7 +213,7 @@
   <!-- END: Hero Section -->
   <!-- BEGIN: Impact Stats -->
   <section class="py-20 bg-brand-deep relative overflow-hidden" id="stats">
-    <div class="container mx-auto px-6 relative z-10">
+    <div class="container mx-auto px-4 md:px-6 relative z-10">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
         <div class="text-center" data-purpose="stat-item" data-aos="zoom-in" data-aos-delay="100">
           <div class="text-4xl lg:text-5xl font-extrabold text-brand mb-2">12,450+</div>
@@ -237,7 +237,7 @@
   <!-- END: Impact Stats -->
   <!-- BEGIN: Problem/Solution Section -->
   <section class="py-24 bg-white" id="problem">
-    <div class="container mx-auto px-6">
+    <div class="container mx-auto px-4 md:px-6">
       <div class="flex flex-col lg:flex-row items-center gap-16 mb-32">
         <div class="lg:w-1/2 order-2 lg:order-1" data-aos="fade-right">
           <div class="relative rounded-3xl overflow-hidden shadow-2xl" data-tilt data-tilt-max="3" data-tilt-speed="400"
@@ -321,7 +321,7 @@
   <!-- END: Problem/Solution Section -->
   <!-- BEGIN: How It Works -->
   <section class="py-24 bg-slate-50" id="how-it-works">
-    <div class="container mx-auto px-6 text-center">
+    <div class="container mx-auto px-4 md:px-6 text-center">
       <h2 class="text-4xl font-extrabold text-slate-900 mb-16" data-aos="fade-up">How It Works</h2>
       <div class="grid md:grid-cols-3 gap-8">
         <!-- Step 1 -->
@@ -360,7 +360,7 @@
   <!-- END: How It Works -->
   <!-- BEGIN: Dashboard Preview Section -->
   <section class="py-24 bg-white overflow-hidden" id="dashboard">
-    <div class="container mx-auto px-6">
+    <div class="container mx-auto px-4 md:px-6">
       <div class="text-center mb-16" data-aos="fade-down">
         <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Powerful Analytics for Authorities</h2>
         <p class="text-lg text-slate-600 max-w-2xl mx-auto">Monitor your city's health in real-time with comprehensive
@@ -397,7 +397,7 @@
             </div>
             <!-- Main Content Area -->
             <div class="flex-1 bg-slate-50 flex flex-col">
-              <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
+              <header class="h-16 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between">
                 <div class="font-bold text-slate-800">Admin Command Center</div>
                 <div class="flex items-center space-x-3">
                   <div class="w-8 h-8 rounded-full bg-slate-200"></div>
@@ -476,7 +476,7 @@
   <!-- END: Dashboard Preview Section -->
   <!-- BEGIN: CTA Section -->
   <section class="py-24 bg-white">
-    <div class="container mx-auto px-6" data-aos="fade-up">
+    <div class="container mx-auto px-4 md:px-6" data-aos="fade-up">
       <div class="bg-brand-deep rounded-[3rem] p-12 lg:p-24 text-center relative overflow-hidden" data-tilt
         data-tilt-max="2" data-tilt-speed="400" data-tilt-scale="1.02">
         <!-- Decoration -->
@@ -499,7 +499,7 @@
   <!-- END: CTA Section -->
   <!-- BEGIN: Footer -->
   <footer class="bg-white pt-24 pb-12 border-t border-slate-100">
-    <div class="container mx-auto px-6">
+    <div class="container mx-auto px-4 md:px-6">
       <div class="grid md:grid-cols-4 gap-12 mb-16">
         <div class="col-span-2">
           <div class="flex items-center space-x-2 mb-6">

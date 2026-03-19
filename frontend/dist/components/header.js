@@ -35,7 +35,7 @@ import { API_BASE } from '../js/apiConfig.js';
         <div class="flex items-center gap-6">
             <a href="citizen.html" class="flex items-center gap-3 text-[#111813] dark:text-primary hover:opacity-80 transition-opacity">
                 ${logoSVG}
-                <h2 class="text-lg font-bold tracking-tight">CleanCity Portal</h2>
+                <h2 class="text-base sm:text-lg font-bold tracking-tight">CleanCity Portal</h2>
             </a>
             <nav class="hidden lg:flex items-center gap-7">
                 <a class="${navClass('citizen')}" href="citizen.html">Dashboard</a>
@@ -49,7 +49,7 @@ import { API_BASE } from '../js/apiConfig.js';
             <!-- Report Issue button (only visible on dashboard) -->
             ${isActive('citizen') ? `<button onclick="openReportModal ? openReportModal() : null"
                 class="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-[#111813] rounded-lg text-sm font-bold hover:brightness-105 transition-all shadow-lg shadow-primary/20">
-                <span class="material-symbols-outlined text-lg">add_circle</span> Report Issue
+                <span class="material-symbols-outlined text-base sm:text-lg">add_circle</span> Report Issue
             </button>` : ''}
             <!-- Notification bell -->
             <button id="gh-notif-btn" class="relative flex items-center justify-center rounded-lg h-9 w-9 bg-background-light dark:bg-white/10 hover:bg-primary/20 transition-all">
@@ -172,7 +172,7 @@ import { API_BASE } from '../js/apiConfig.js';
         <div id="pp-edit-section" class="hidden px-6 py-4 border-b border-[#dbe6df] dark:border-white/10">
             <button onclick="closeProfilePanel(); document.getElementById('editProfileBtn') && document.getElementById('editProfileBtn').click();"
                 class="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-background-light dark:bg-white/10 border border-[#dbe6df] dark:border-white/10 text-sm font-bold hover:bg-primary/10 hover:border-primary/30 transition-all">
-                <span class="material-symbols-outlined text-lg">edit</span> Edit Profile
+                <span class="material-symbols-outlined text-base sm:text-lg">edit</span> Edit Profile
             </button>
         </div>
 
@@ -180,7 +180,7 @@ import { API_BASE } from '../js/apiConfig.js';
         <div class="px-6 py-6 mt-auto">
             <button onclick="doLogout()"
                 class="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-all">
-                <span class="material-symbols-outlined text-lg">logout</span> Sign Out
+                <span class="material-symbols-outlined text-base sm:text-lg">logout</span> Sign Out
             </button>
         </div>
     </div>`;
