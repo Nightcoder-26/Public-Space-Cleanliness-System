@@ -58,7 +58,10 @@ const IssueSchema = new mongoose.Schema({
     verificationAccuracyScore: { type: Number, default: 0 },
     // Gamification
     pointsAwarded: { type: Number, default: 0 },
-    upvotes: { type: Number, default: 0 }
+    upvotes: { type: Number, default: 0 },
+    // ── Deduplication & Aggregation ─────────────────────────────
+    reportCount: { type: Number, default: 1 },
+    reportedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 // --- Performance Indexes ---
@@ -66,7 +69,11 @@ const IssueSchema = new mongoose.Schema({
 IssueSchema.index({ userId: 1, dateReported: -1 });
 // Speed up authority/status-based filtering
 IssueSchema.index({ status: 1, dateReported: -1 });
-// Speed up geo-proximity queries (community nearby feature)
+// Speed up geo-proximity queries (community nearby + deduplication)
 IssueSchema.index({ latitude: 1, longitude: 1 });
+// Compound index for fast deduplication lookup (category + geo)
+IssueSchema.index({ category: 1, latitude: 1, longitude: 1 });
+// Speed up reportedBy membership checks
+IssueSchema.index({ reportedBy: 1 });
 
 module.exports = mongoose.model('Issue', IssueSchema);

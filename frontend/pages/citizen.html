@@ -497,8 +497,8 @@
                                 <tr>
                                     <th class="px-5 py-3 text-xs font-bold text-[#61896f] uppercase tracking-wider">
                                         Issue</th>
-                                    <th class="px-5 py-3 text-xs font-bold text-[#61896f] uppercase tracking-wider">Date
-                                    </th>
+                                    <th class="px-5 py-3 text-xs font-bold text-[#61896f] uppercase tracking-wider">Date</th>
+                                    <th class="px-5 py-3 text-xs font-bold text-[#61896f] uppercase tracking-wider">Reports</th>
                                     <th class="px-5 py-3 text-xs font-bold text-[#61896f] uppercase tracking-wider">
                                         Status</th>
                                     <th class="px-5 py-3 text-xs font-bold text-[#61896f] uppercase tracking-wider">
@@ -1037,6 +1037,7 @@ import { getSocket } from '../js/socket.js';
                         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
                             <span style="background:${color}22;color:${color};padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">${issue.severity}</span>
                             <span style="background:#f0f0f0;color:#333;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600">${issue.status}</span>
+                            <span style="background:#e0f2fe;color:#0284c7;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">👥 ${issue.reportCount || 1} Reports</span>
                         </div>
                         <p style="font-size:10px;color:#888;margin:0">📅 ${dateStr}</p>
                         <p style="font-size:10px;color:#888;margin:2px 0 0">👤 ${issue.reporter || 'Anonymous'}</p>
@@ -1099,6 +1100,11 @@ import { getSocket } from '../js/socket.js';
         </div>
       </td>
       <td class="px-5 py-4 text-sm text-[#61896f]">${date}</td>
+      <td class="px-5 py-4">
+        <span class="inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black border border-blue-200" title="Reported ${issue.reportCount || 1} times">
+          ${issue.reportCount || 1}
+        </span>
+      </td>
       <td class="px-5 py-4">
         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-black ${statusCls}">${issue.status}</span>
       </td>
