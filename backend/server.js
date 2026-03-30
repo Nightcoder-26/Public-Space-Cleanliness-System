@@ -60,6 +60,12 @@ io.on("connection", (socket) => {
 
     socket.on("chat_message", (msg) => io.to("global_ngo_network").emit("chat_message", msg));
 
+    // Message deletion — re-broadcast to the room so all clients update their UI
+    socket.on("delete_message", ({ msgId, room }) => {
+        const targetRoom = room || "global_ngo_network";
+        io.to(targetRoom).emit("delete_message", { msgId });
+    });
+
     socket.on("disconnect", () => {
         if (process.env.NODE_ENV !== "production") {
             console.log("Client disconnected:", socket.id);

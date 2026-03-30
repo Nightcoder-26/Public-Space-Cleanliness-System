@@ -30,10 +30,24 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getActiveIssues = async (req, res) => {
     try {
-        const ngo = await NGO.findOne({ email: req.user.email });
-        if (!ngo) return res.status(404).json({ error: 'NGO profile not found' });
+        let ngo = await NGO.findOne({ email: req.user.email });
 
-        // Get issues assigned to this NGO or unassigned
+        // Auto-create NGO profile for newly registered authority accounts
+        // so they see all available issues right away
+        if (!ngo) {
+            const User = require('../models/User');
+            const user = await User.findById(req.user.id);
+            ngo = new NGO({
+                name: (user && user.name) ? user.name : 'New NGO',
+                email: req.user.email,
+                specialization: 'General Civic Action',
+                location: { latitude: 0, longitude: 0, address: 'HQ' },
+                isVerified: false
+            });
+            await ngo.save();
+        }
+
+        // All unclaimed (ngoId null, not Resolved) + this NGO's own issues
         const issues = await Issue.find({
             $or: [
                 { ngoId: ngo._id },

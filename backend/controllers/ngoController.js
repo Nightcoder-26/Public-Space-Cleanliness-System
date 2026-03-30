@@ -87,15 +87,34 @@ const summarizeChatHeuristic = (messages) => {
 
 exports.sendMessage = async (req, res) => {
     try {
-        const { senderId, senderName, senderRole, text, attachments = [], priority = 'Normal', issueId = null } = req.body;
+        const { text, attachments = [], priority = 'Normal', issueId = null } = req.body;
+
+        // Always resolve the real NGO name from the database — never trust client-sent senderName
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(401).json({ error: 'User not found' });
+
+        let ngo = await NGO.findOne({ email: user.email });
+        if (!ngo) {
+            // Auto-create NGO profile for new authority accounts
+            ngo = new NGO({
+                name: user.name || 'Unknown NGO',
+                email: user.email,
+                specialization: 'General Civic Action',
+                location: { latitude: 0, longitude: 0, address: user.location || 'HQ' },
+                isVerified: false
+            });
+            await ngo.save();
+        }
+
+        const realSenderName = ngo.name;
+        const realSenderId = String(ngo._id);
 
         // 1. Detect Keywords
         const isEmergency = detectEmergencyKeywords(text);
-        let finalPriority = priority;
+        let finalPriority = isEmergency ? 'Emergency' : priority;
         let aiSystemAlert = null;
 
         if (isEmergency) {
-            finalPriority = 'Emergency';
             aiSystemAlert = {
                 type: 'SYSTEM_ALERT',
                 title: 'CRITICAL HAZARD DETECTED',
@@ -104,7 +123,13 @@ exports.sendMessage = async (req, res) => {
         }
 
         const msgRecord = new Message({
-            senderId, senderName, senderRole, text, attachments, priority: finalPriority, issueId
+            senderId: realSenderId,
+            senderName: realSenderName,
+            senderRole: 'NGO',
+            text,
+            attachments,
+            priority: finalPriority,
+            issueId
         });
 
         const savedMsg = await msgRecord.save();
@@ -112,14 +137,10 @@ exports.sendMessage = async (req, res) => {
         // 2. Broadcast
         if (req.app.locals.io) {
             const io = req.app.locals.io;
-            // if issueId is present, broadcast to that room. else global
             const room = issueId ? `issue_${issueId}` : 'global_ngo_network';
-
             io.to(room).emit('chat_message', savedMsg);
 
-            // 3. Emit system wide alert to authority namespace if emergency
             if (aiSystemAlert) {
-                // We'll emit globally so the UI catches it regardless of room
                 io.emit('system_alert', aiSystemAlert);
             }
         }
@@ -127,6 +148,40 @@ exports.sendMessage = async (req, res) => {
         res.status(201).json(savedMsg);
     } catch (err) {
         res.status(500).json({ error: "Failed to send message", details: err.message });
+    }
+};
+
+exports.deleteMessage = async (req, res) => {
+    try {
+        const { msgId } = req.params;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(401).json({ error: 'User not found' });
+
+        const ngo = await NGO.findOne({ email: user.email });
+        const msg = await Message.findById(msgId);
+        if (!msg) return res.status(404).json({ error: 'Message not found' });
+
+        // Only the original sender can delete
+        const senderId = ngo ? String(ngo._id) : String(user._id);
+        if (msg.senderId !== senderId) {
+            return res.status(403).json({ error: 'You can only delete your own messages' });
+        }
+
+        msg.deleted = true;
+        msg.deletedAt = new Date();
+        msg.text = 'Message deleted';
+        await msg.save();
+
+        // Broadcast deletion to the appropriate room
+        if (req.app.locals.io) {
+            const io = req.app.locals.io;
+            const room = msg.issueId ? `issue_${msg.issueId}` : 'global_ngo_network';
+            io.to(room).emit('delete_message', { msgId: String(msg._id) });
+        }
+
+        res.json({ success: true, msgId: String(msg._id) });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete message', details: err.message });
     }
 };
 

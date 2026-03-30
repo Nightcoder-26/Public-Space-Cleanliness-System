@@ -909,6 +909,17 @@
             </div>
         </main>
     </div>
+
+    <!-- ===== NGO DETAIL MODAL ===== -->
+    <div id="ngo-detail-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] hidden items-center justify-center p-4"
+        onclick="if(event.target===this) closeNGOModal()">
+        <div id="ngo-detail-content"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-y-auto transform transition-all duration-200 scale-95 opacity-0">
+            <!-- Populated by openNGOModal() -->
+        </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
 import { API_BASE } from '../js/apiConfig.js';
@@ -1267,6 +1278,15 @@ import { API_BASE } from '../js/apiConfig.js';
                 document.getElementById('typing-indicator').classList.add('hidden');
             });
 
+            socket.on('delete_message', ({ msgId }) => {
+                const el = document.getElementById(`msg-${msgId}`);
+                if (el) {
+                    const isRight = el.classList.contains('flex-row-reverse');
+                    el.className = `flex ${isRight ? 'justify-end' : 'justify-start'} my-1`;
+                    el.innerHTML = `<span class="text-[10px] italic text-slate-400 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">🗑️ Message deleted</span>`;
+                }
+            });
+
             socket.on('system_alert', (alert) => {
                 const container = document.getElementById('system-alerts');
                 const div = document.createElement('div');
@@ -1292,54 +1312,101 @@ import { API_BASE } from '../js/apiConfig.js';
 
         function renderChatMessage(msg) {
             const chatContainer = document.getElementById('chat-messages-container');
-            const div = document.createElement('div');
 
-            let priorityStyle = '';
-            if (msg.priority === 'Emergency') {
-                priorityStyle = 'ring-2 ring-red-500/50 bg-red-50';
-            } else if (msg.priority === 'Important') {
-                priorityStyle = 'bg-amber-50';
-            }
+            // Remove any old element with the same msgId first (avoid dupes on history reload)
+            const existing = document.getElementById(`msg-${msg._id}`);
+            if (existing) existing.remove();
+
+            const div = document.createElement('div');
+            div.id = `msg-${msg._id}`;
 
             const timeString = new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const isOwn = msg.senderId === String(currentNgo.id);
 
-            if (msg.senderRole === 'Authority') {
-                div.className = 'flex flex-row-reverse gap-2 group';
+            // ── Deleted placeholder ────────────────────────────────────────
+            if (msg.deleted) {
+                div.className = `flex ${isOwn ? 'justify-end' : 'justify-start'} my-1`;
                 div.innerHTML = `
-                <div class="size-7 rounded-full bg-slate-900 border-2 border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm relative z-10">
-                    <span class="material-symbols-outlined text-xs text-white">admin_panel_settings</span>
-                </div>
-                <div class="text-right max-w-[85%]">
-                    <div class="flex flex-row-reverse items-baseline gap-2 mb-1">
-                        <span class="text-[10px] font-black tracking-tight text-slate-800">${msg.senderName}</span>
-                        <span class="text-[9px] text-slate-400 font-medium">${timeString}</span>
-                    </div>
-                    <div class="text-[12px] bg-white border border-slate-200 shadow-sm text-slate-700 p-2.5 rounded-l-xl rounded-br-xl ${priorityStyle}">
-                        ${msg.priority === 'Emergency' ? '<span class="text-[10px] font-bold text-red-600 block mb-1">EMERGENCY MSG</span>' : ''}
-                        ${msg.text}
-                    </div>
-                </div>
-            `;
-            } else {
-                div.className = 'flex gap-2 group';
-                div.innerHTML = `
-                <div class="size-7 rounded-full bg-emerald-100 border-2 border-emerald-500/20 flex items-center justify-center flex-shrink-0 shadow-sm relative z-10">
-                    <span class="material-symbols-outlined text-xs text-emerald-700">groups</span>
-                </div>
-                <div class="max-w-[85%]">
-                    <div class="flex items-baseline gap-2 mb-1">
-                        <span class="text-[10px] font-black tracking-tight text-slate-800">${msg.senderName}</span>
-                        <span class="text-[9px] text-slate-400 font-medium">${timeString}</span>
-                    </div>
-                    <div class="text-[12px] bg-white border border-slate-200 shadow-sm text-slate-700 p-2.5 rounded-r-xl rounded-bl-xl ${priorityStyle}">
-                        ${msg.priority === 'Emergency' ? '<span class="text-[10px] font-bold text-red-600 block mb-1">EMERGENCY MSG</span>' : ''}
-                        ${msg.text}
-                    </div>
-                </div>
-            `;
+                    <span class="text-[10px] italic text-slate-400 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
+                        🗑️ Message deleted
+                    </span>`;
+                chatContainer.appendChild(div);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                return;
             }
+
+            // ── Emergency / Important styling ──────────────────────────────
+            let bubbleExtra = '';
+            let emergencyBadge = '';
+            if (msg.priority === 'Emergency') {
+                bubbleExtra = 'ring-2 ring-red-400/60';
+                emergencyBadge = `<span class="text-[9px] font-extrabold text-red-500 uppercase tracking-wider block mb-1">🚨 Emergency</span>`;
+            } else if (msg.priority === 'Important') {
+                bubbleExtra = 'ring-1 ring-amber-400/60';
+            }
+
+            // ── Avatar initials ────────────────────────────────────────────
+            const initials = (msg.senderName || '?').charAt(0).toUpperCase();
+
+            // ── Delete button (only for own messages) ─────────────────────
+            const deleteBtn = isOwn
+                ? `<button
+                        onclick="deleteChatMessage('${msg._id}')"
+                        class="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-slate-300 hover:text-red-500 p-1 rounded-full hover:bg-red-50"
+                        title="Delete message">
+                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                    </button>`
+                : '';
+
+            if (isOwn) {
+                // ── MY message — RIGHT side ────────────────────────────────
+                div.className = 'flex flex-row-reverse items-end gap-2 group my-1';
+                div.innerHTML = `
+                    <div class="size-7 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm">${initials}</div>
+                    <div class="flex flex-col items-end max-w-[78%]">
+                        <div class="flex flex-row-reverse items-center gap-2 mb-1">
+                            <span class="text-[10px] font-black text-slate-800">${msg.senderName}</span>
+                            <span class="text-[9px] text-slate-400">${timeString}</span>
+                            ${deleteBtn}
+                        </div>
+                        <div class="text-[12px] bg-slate-800 text-white px-3.5 py-2.5 rounded-t-2xl rounded-bl-2xl rounded-br-sm shadow-md ${bubbleExtra}">
+                            ${emergencyBadge}${msg.text}
+                        </div>
+                    </div>`;
+            } else {
+                // ── OTHER message — LEFT side ──────────────────────────────
+                div.className = 'flex flex-row items-end gap-2 group my-1';
+                div.innerHTML = `
+                    <div class="size-7 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm">${initials}</div>
+                    <div class="flex flex-col items-start max-w-[78%]">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] font-black text-slate-800">${msg.senderName}</span>
+                            <span class="text-[9px] text-slate-400">${timeString}</span>
+                        </div>
+                        <div class="text-[12px] bg-white border border-slate-200 text-slate-800 px-3.5 py-2.5 rounded-t-2xl rounded-br-2xl rounded-bl-sm shadow-sm ${bubbleExtra}">
+                            ${emergencyBadge}${msg.text}
+                        </div>
+                    </div>`;
+            }
+
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function deleteChatMessage(msgId) {
+            try {
+                const res = await fetch(`${API}/ngo/chat/messages/${msgId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    showNotification('Error', err.error || 'Could not delete message.', 'error');
+                }
+                // The socket event will update the UI for all clients
+            } catch (err) {
+                console.error('Delete message error:', err);
+            }
         }
 
         async function loadChatHistory(issueId) {
@@ -1412,10 +1479,10 @@ import { API_BASE } from '../js/apiConfig.js';
 
         function handleTyping() {
             const roomName = currentChatRoom === 'global' ? 'global_ngo_network' : `issue_${currentChatRoom}`;
-            socket.emit("typing", { room: roomName, user: "Dispatcher 04" });
+            socket.emit("typing", { room: roomName, user: currentNgo.name || 'NGO' });
             clearTimeout(typingTimeout);
             typingTimeout = setTimeout(() => {
-                socket.emit("stop_typing", { room: roomName, user: "Dispatcher 04" });
+                socket.emit("stop_typing", { room: roomName, user: currentNgo.name || 'NGO' });
             }, 1500);
         }
 
@@ -1440,9 +1507,7 @@ import { API_BASE } from '../js/apiConfig.js';
             if (!text) return;
 
             const payload = {
-                senderId: currentNgo.id,
-                senderName: currentNgo.name,
-                senderRole: 'Authority',
+                // senderId/senderName resolved server-side from JWT — only send text/priority/issueId
                 text: text,
                 priority: isEmergencyPriority ? 'Emergency' : 'Normal',
                 issueId: currentChatRoom === 'global' ? null : currentChatRoom
@@ -1672,31 +1737,206 @@ import { API_BASE } from '../js/apiConfig.js';
 
         async function fetchNGORegistry() {
             try {
-                const res = await fetch(`${API}/ngo/directory`);
+                const res = await fetch(`${API}/ngo/directory`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 const ngos = await res.json();
                 const grid = document.getElementById('ngo-registry-grid');
-                grid.innerHTML = ngos.map(ngo => `
-                    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="size-12 rounded-lg bg-slate-100 flex items-center justify-center text-xl font-black text-slate-300 border border-slate-200">${ngo.name.charAt(0)}</div>
-                            <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[9px] font-bold uppercase tracking-wider">Verified</span>
-                        </div>
-                        <h4 class="font-bold text-slate-900 truncate">${ngo.name}</h4>
-                        <p class="text-xs text-slate-500 mt-1">${ngo.specialization}</p>
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between">
-                            <div class="text-center">
-                                <div class="text-lg font-bold text-slate-900">${ngo.totalIssuesHandled}</div>
-                                <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Missions</div>
+
+                if (!ngos.length) {
+                    grid.innerHTML = `<div class="col-span-3 text-center py-12 text-slate-400 text-sm">No NGOs registered yet.</div>`;
+                    return;
+                }
+
+                grid.innerHTML = ngos.map(ngo => {
+                    const statusColor = ngo.operatingStatus === 'Busy'
+                        ? 'bg-amber-100 text-amber-700 border-amber-200'
+                        : ngo.operatingStatus === 'Offline'
+                            ? 'bg-slate-100 text-slate-500 border-slate-200'
+                            : 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                    const statusDot = ngo.operatingStatus === 'Busy'
+                        ? 'bg-amber-500'
+                        : ngo.operatingStatus === 'Offline'
+                            ? 'bg-slate-400'
+                            : 'bg-emerald-500';
+
+                    const isCurrentNgo = String(ngo._id) === String(currentNgo.id);
+                    const ratingStars = Math.round(ngo.rating || 0);
+                    const stars = '★'.repeat(Math.min(ratingStars, 5)) + '☆'.repeat(Math.max(0, 5 - ratingStars));
+
+                    return `
+                        <div onclick="openNGOModal('${ngo._id}')"
+                            class="bg-white border ${isCurrentNgo ? 'border-primary ring-2 ring-primary/20' : 'border-slate-200'} rounded-xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer relative group">
+
+                            ${isCurrentNgo ? '<span class="absolute top-3 right-3 text-[9px] font-bold bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-wider">You</span>' : ''}
+
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="size-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-lg font-black text-white shadow-md">${ngo.name.charAt(0)}</div>
+                                <span class="inline-flex items-center gap-1 px-2 py-1 ${statusColor} border rounded-full text-[9px] font-bold uppercase tracking-wider">
+                                    <span class="size-1.5 rounded-full ${statusDot}"></span>
+                                    ${ngo.operatingStatus || 'Active'}
+                                </span>
                             </div>
-                            <div class="text-center">
-                                <div class="text-lg font-bold text-amber-500">${(ngo.rating || 5.0).toFixed(1)}</div>
-                                <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Rating</div>
+
+                            <h4 class="font-bold text-slate-900 truncate text-sm">${ngo.name}</h4>
+                            <p class="text-[11px] text-slate-500 mt-0.5 truncate">${ngo.specialization}</p>
+
+                            <div class="mt-1 text-amber-400 text-[13px] tracking-tight">${stars}</div>
+
+                            <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-slate-900">${ngo.totalIssuesHandled || 0}</div>
+                                    <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Solved</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-amber-500">${(ngo.rating || 0).toFixed(1)}</div>
+                                    <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Rating</div>
+                                </div>
                             </div>
-                        </div>
-                        <button onclick="window.location.href='ngo-profile.html?id=${ngo._id}'" class="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded transition-colors">View Analytics</button>
-                    </div>
-                `).join('');
+
+                            <div class="mt-4 w-full py-2 bg-slate-50 group-hover:bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded-lg text-center transition-colors">
+                                View Details →
+                            </div>
+                        </div>`;
+                }).join('');
             } catch (e) { console.error("Registry:", e); }
+        }
+
+        async function openNGOModal(ngoId) {
+            const modal = document.getElementById('ngo-detail-modal');
+            const content = document.getElementById('ngo-detail-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            content.innerHTML = `
+                <div class="flex items-center justify-center h-40 text-slate-400">
+                    <span class="material-symbols-outlined animate-spin text-primary">sync</span>
+                </div>`;
+            setTimeout(() => content.classList.remove('scale-95', 'opacity-0'), 10);
+
+            try {
+                const res = await fetch(`${API}/ngo/${ngoId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const p = data.profile;
+                const resolved = data.resolutionHistory ? data.resolutionHistory.length : (p.totalIssuesHandled || 0);
+                const active   = data.activeMissions   ? data.activeMissions.length   : 0;
+                const successRate = p.resolutionSuccessRate ? p.resolutionSuccessRate.toFixed(1) + '%' : 'N/A';
+
+                const statusColor = p.operatingStatus === 'Busy'
+                    ? 'bg-amber-100 text-amber-700 border-amber-200'
+                    : p.operatingStatus === 'Offline'
+                        ? 'bg-slate-100 text-slate-500'
+                        : 'bg-emerald-100 text-emerald-700 border-emerald-200';
+
+                const ratingVal = (p.rating || 0).toFixed(1);
+                const ratingInt = Math.round(p.rating || 0);
+                const stars = '★'.repeat(Math.min(ratingInt, 5)) + '☆'.repeat(Math.max(0, 5 - ratingInt));
+
+                content.innerHTML = `
+                    <!-- Header -->
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-800">
+                        <div class="flex items-center gap-4">
+                            <div class="size-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-2xl font-black text-white shadow-lg">
+                                ${p.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-white">${p.name}</h3>
+                                <p class="text-xs text-slate-400">${p.specialization}</p>
+                                <div class="text-amber-400 text-sm mt-0.5">${stars} <span class="text-slate-400 text-[10px]">${ratingVal}/5</span></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 ${statusColor} border rounded-full text-[9px] font-bold uppercase tracking-wider">
+                                ${p.operatingStatus || 'Active'}
+                            </span>
+                            <button onclick="closeNGOModal()" class="text-slate-400 hover:text-white transition-colors">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-3 gap-0 border-b border-slate-100">
+                        <div class="p-4 text-center border-r border-slate-100">
+                            <div class="text-2xl font-black text-slate-900">${resolved}</div>
+                            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1">Issues Solved</div>
+                        </div>
+                        <div class="p-4 text-center border-r border-slate-100">
+                            <div class="text-2xl font-black text-amber-500">${ratingVal}</div>
+                            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1">Rating</div>
+                        </div>
+                        <div class="p-4 text-center">
+                            <div class="text-2xl font-black text-emerald-600">${successRate}</div>
+                            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1">Success Rate</div>
+                        </div>
+                    </div>
+
+                    <!-- Active Missions count -->
+                    <div class="px-6 pt-5 pb-4">
+                        <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Live Status</h4>
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="material-symbols-outlined text-amber-500">front_hand</span>
+                            <div>
+                                <div class="text-sm font-bold text-slate-900">${active} Active Mission${active !== 1 ? 's' : ''}</div>
+                                <div class="text-[10px] text-slate-500">Currently in progress</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="px-6 pb-5">
+                        <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Contact Information</h4>
+                        <div class="space-y-2">
+                            ${p.directorName ? `
+                            <div class="flex items-center gap-3 text-xs text-slate-700">
+                                <span class="material-symbols-outlined text-slate-400 text-sm">person</span>
+                                <span><span class="font-semibold">Director:</span> ${p.directorName}</span>
+                            </div>` : ''}
+                            ${p.email ? `
+                            <div class="flex items-center gap-3 text-xs text-slate-700">
+                                <span class="material-symbols-outlined text-slate-400 text-sm">mail</span>
+                                <span>${p.email}</span>
+                            </div>` : ''}
+                            ${p.emergencyContact ? `
+                            <div class="flex items-center gap-3 text-xs text-slate-700">
+                                <span class="material-symbols-outlined text-slate-400 text-sm">call</span>
+                                <span>${p.emergencyContact}</span>
+                            </div>` : ''}
+                            ${p.website ? `
+                            <div class="flex items-center gap-3 text-xs text-slate-700">
+                                <span class="material-symbols-outlined text-slate-400 text-sm">language</span>
+                                <a href="${p.website}" target="_blank" class="text-primary hover:underline">${p.website}</a>
+                            </div>` : ''}
+                            ${(!p.directorName && !p.email && !p.emergencyContact && !p.website) ?
+                                '<p class="text-[11px] text-slate-400 italic">No contact information available.</p>' : ''}
+                        </div>
+                    </div>
+
+                    <!-- Footer CTA -->
+                    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex gap-3">
+                        <a href="ngo-profile.html?id=${p._id}" class="flex-1 py-2.5 bg-slate-900 text-white rounded-lg text-xs font-bold text-center hover:bg-slate-800 transition-colors">
+                            Full Profile
+                        </a>
+                        <button onclick="closeNGOModal()" class="flex-1 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors">
+                            Close
+                        </button>
+                    </div>`;
+
+            } catch (e) {
+                console.error("NGO modal fetch error:", e);
+                content.innerHTML = `<div class="p-8 text-center text-red-500">Failed to load NGO profile.</div>`;
+            }
+        }
+
+        function closeNGOModal() {
+            const modal = document.getElementById('ngo-detail-modal');
+            const content = document.getElementById('ngo-detail-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 200);
         }
 
         let ngoChartInstance1 = null;

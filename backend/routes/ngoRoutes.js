@@ -9,6 +9,7 @@ router.use(protect);
 router.post('/chat/send', ngoController.sendMessage);
 router.get('/chat/messages', ngoController.getMessages);
 router.get('/chat/messages/:issueId', ngoController.getMessagesByIssue);
+router.delete('/chat/messages/:msgId', ngoController.deleteMessage);
 router.get('/directory', ngoController.getDirectory);
 router.get('/collaboration/:issueId', ngoController.smartTeamFormation);
 router.get('/chat/summary/:issueId', ngoController.getChatSummary);
