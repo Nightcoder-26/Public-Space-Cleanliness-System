@@ -35,19 +35,36 @@
             },
         }
 
-        async function openNgoSidebar() {
+        async function openNgoSidebar(ngoId) {
             const sidebar = document.getElementById('ngoProfileSidebar');
             const overlay = document.getElementById('ngoProfileOverlay');
+            const token = localStorage.getItem('token');
 
             try {
-                // Fetch dynamic NGO data for the sidebar
-                const res = await fetch(`${API}/ngo/directory`);
-                const ngos = await res.json();
-                if (ngos && ngos.length > 0) {
-                    const primaryNgo = ngos[0]; // Display the primary/first partner
+                document.getElementById('sidebar-ngo-name').innerText = 'Loading...';
+                document.getElementById('sidebar-ngo-spec').innerText = 'Please wait';
 
+                let targetId = ngoId;
+                
+                if (!targetId) {
+                    // Fetch dynamic NGO data for the sidebar
+                    const res = await fetch(`${API}/ngo/directory`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const ngos = await res.json();
+                        if (ngos && ngos.length > 0) {
+                            targetId = ngos[0]._id;
+                        }
+                    }
+                }
+
+                if (targetId) {
                     // Fetch deep metrics matching the ngo-profile calculation logic
-                    const profileRes = await fetch(`${API}/ngo/${primaryNgo._id}`);
+                    const profileRes = await fetch(`${API}/ngo/${targetId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
                     if (profileRes.ok) {
                         const profileData = await profileRes.json();
                         const profile = profileData.profile;
@@ -66,7 +83,7 @@
                         document.getElementById('sidebar-ngo-rating').innerText = (profile.rating || 5.0).toFixed(1);
 
                         // Setup link to full profile page
-                        document.getElementById('sidebar-full-profile-btn').href = `ngo-profile.html?id=${primaryNgo._id}`;
+                        document.getElementById('sidebar-full-profile-btn').href = `ngo-profile.html?id=${targetId}`;
 
                         // Call backend AI Insights if necessary
                         document.getElementById('sidebar-ngo-ai-insight').innerHTML = profileData.aiInsights && profileData.aiInsights[0] ? `"${profileData.aiInsights[0]}"` : `"${profile.name} resolves incidents <span class="text-emerald-400 font-bold">highly effectively</span> compared to regional averages. Highly recommended."`;
@@ -74,6 +91,8 @@
                 }
             } catch (err) {
                 console.error("Failed to load sidebar dynamic data", err);
+                document.getElementById('sidebar-ngo-name').innerText = "Data Unavailable";
+                document.getElementById('sidebar-ngo-spec').innerText = "Network Error - Could not connect to database.";
             }
 
             overlay.classList.remove('hidden');

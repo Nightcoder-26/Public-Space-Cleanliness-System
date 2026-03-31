@@ -151,33 +151,28 @@ exports.createIssue = async (req, res) => {
         const savedIssue = await newIssue.save();
 
         // Award full points + XP + CO2 to reporter
-        await User.findByIdAndUpdate(
-            userId,
-            [
-                {
-                    $set: {
-                        points:            { $add: ['$points', points] },
-                        totalPointsEarned: { $add: ['$totalPointsEarned', points] },
-                        xp: {
-                            $cond: [
-                                { $gte: [{ $add: ['$xp', xpGain] }, { $multiply: ['$level', 500] }] },
-                                0,
-                                { $add: ['$xp', xpGain] }
-                            ]
-                        },
-                        level: {
-                            $cond: [
-                                { $gte: [{ $add: ['$xp', xpGain] }, { $multiply: ['$level', 500] }] },
-                                { $add: ['$level', 1] },
-                                '$level'
-                            ]
-                        },
-                        co2Saved: { $add: ['$co2Saved', co2Gain] }
-                    }
+        const user = await User.findById(userId);
+        if (user) {
+            let nextLevelXp = (user.level || 1) * 500;
+            let newXp = (user.xp || 0) + xpGain;
+            
+            let updateOps = {
+                $inc: {
+                    points: points,
+                    totalPointsEarned: points,
+                    co2Saved: co2Gain
                 }
-            ],
-            { new: true }
-        );
+            };
+            
+            if (newXp >= nextLevelXp) {
+                updateOps.$set = { xp: 0 };
+                updateOps.$inc.level = 1;
+            } else {
+                updateOps.$inc.xp = xpGain;
+            }
+            
+            await User.findByIdAndUpdate(userId, updateOps, { new: true });
+        }
 
         await PointTransaction.create({
             userId,
@@ -211,7 +206,7 @@ exports.createIssue = async (req, res) => {
             xpGained:      xpGain,
             co2Saved:      co2Gain,
             assignedAuthority,
-            message: 'Issue reported successfully.'
+            message: 'Issue reported successfully'
         });
 
         // ── Post-response: community feed + sockets ────────────────────────
