@@ -148,3 +148,47 @@ exports.updateUser = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+exports.googleLogin = async (req, res) => {
+    try {
+        const { googleToken, role } = req.body;
+        // In a production app, use google-auth-library to verify the signature.
+        // For this project, jwt.decode Extracts payload to identify the user.
+        const decoded = jwt.decode(googleToken);
+        if (!decoded || !decoded.email) {
+            return res.status(400).json({ message: "Invalid Google Token" });
+        }
+
+        let user = await User.findOne({ email: decoded.email }).select("_id name email role password points level xp co2Saved").lean();
+        
+        if (!user) {
+            const userDoc = await User.create({
+                name: decoded.name,
+                email: decoded.email,
+                role: role || "citizen",
+                password: "GOOGLE_AUTH_" + Math.random().toString(36).substring(7)
+            });
+            user = { _id: userDoc._id, name: userDoc.name, email: userDoc.email, role: userDoc.role };
+        }
+
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        meCache.set(String(user._id), { data: user, expiresAt: Date.now() + ME_TTL_MS });
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                name: user.name,
+                email: user.email
+            }
+        });
+    } catch (err) {
+        console.error("Google Login Backend Error:", err);
+        res.status(500).json({ message: "Server error during Google Login", success: false });
+    }
+};

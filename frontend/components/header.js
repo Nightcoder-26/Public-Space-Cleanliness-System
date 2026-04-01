@@ -33,9 +33,12 @@ import { API_BASE } from '../js/apiConfig.js';
     const headerHTML = `
     <header id="global-header" class="flex items-center justify-between border-b border-[#dbe6df] dark:border-white/10 bg-white dark:bg-background-dark px-6 lg:px-10 py-3 sticky top-0 z-50">
         <div class="flex items-center gap-6">
-            <a href="citizen.html" class="flex items-center gap-3 text-[#111813] dark:text-primary hover:opacity-80 transition-opacity">
-                ${logoSVG}
-                <h2 class="text-base sm:text-lg font-bold tracking-tight">CleanCity Portal</h2>
+            <!-- New Eco-friendly Branding -->
+            <a href="citizen.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
+                    <span class="text-white text-lg leading-none mt-[-2px]">🌿</span>
+                </div>
+                <span class="font-bold text-lg text-green-600 dark:text-green-400">CleanCity</span>
             </a>
             <nav class="hidden lg:flex items-center gap-7">
                 <a class="${navClass('citizen')}" href="citizen.html">Dashboard</a>

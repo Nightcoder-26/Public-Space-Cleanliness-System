@@ -67,9 +67,11 @@
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1lVmThyg1009hlhcx6_4VOZ4avkiEbMAl4ia0YTXwG0JXi-nVAkWNlAAHIhP7gueGU-cqyFSnZyEyUrMPeBy5nHiXTh5-LGzL52bqxAUIQmcCLJ7vC1k1HMoOpb7q73NrQNiKYH2KoEkwAH8zHasNeZ6Qt4v6yWcYEkO5cfVKIAHkWnpV_npecsdoTm5RUgAzxEMP_NKfSusmm4w6pCKfhzjEdfDsjYDoW8NRsdWka4Vrt7MDvP0G4JOvfpfPDYqJhGmXQRRSVlI" />
             </div>
             <div class="relative z-10 space-y-8">
-                <div class="flex items-center gap-3 text-primary">
-                    <span class="material-symbols-outlined text-4xl">eco</span>
-                    <h2 class="text-3xl font-black tracking-tight">CivicImpact</h2>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
+                        <span class="text-white text-2xl leading-none mt-[-2px]">🌿</span>
+                    </div>
+                    <h2 class="text-3xl font-black tracking-tight text-white">CleanCity</h2>
                 </div>
                 <div class="space-y-4">
                     <h1 class="text-5xl font-black leading-tight text-white">
@@ -108,9 +110,11 @@
         <div
             class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 bg-white dark:bg-background-dark">
             <div class="w-full max-w-md space-y-8">
-                <div class="lg:hidden flex items-center gap-2 mb-8 text-navy-deep dark:text-primary">
-                    <span class="material-symbols-outlined text-3xl">eco</span>
-                    <h2 class="text-xl font-bold">CivicImpact</h2>
+                <div class="lg:hidden flex items-center gap-2 mb-8">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
+                        <span class="text-white text-lg leading-none mt-[-2px]">🌿</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-green-600 dark:text-green-400">CleanCity</h2>
                 </div>
                 <div class="space-y-2">
                     <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Welcome back</h2>
@@ -338,7 +342,6 @@
             }
         });
 
-        // Google Identity Services (One Tap & Rendered Button)
         window.onload = function () {
             google.accounts.id.initialize({
                 client_id: "544576440907-eabpf7g2s0an2u354t2qofo58ev33k9o.apps.googleusercontent.com",
@@ -348,16 +351,53 @@
             // This ensures a 100% reliable click-to-login instead of relying on the OneTap prompt
             google.accounts.id.renderButton(
                 document.getElementById("googleSignInBtnWrap"),
-                { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
+                { theme: "outline", size: "large", type: "standard", text: "continue_with", shape: "rectangular" }
             );
 
             // Still try to automatically prompt One-Tap quietly
             google.accounts.id.prompt();
         };
 
-        function handleCredentialResponse(response) {
-            console.log("Encoded JWT ID token: " + response.credential);
-            alert("Google Login Successful! Token: " + response.credential.substring(0, 20) + "...");
+        async function handleCredentialResponse(response) {
+            // Provide a pleasant UX transition (loading spinner equivalent)
+            const googleBtnWrap = document.getElementById("googleSignInBtnWrap");
+            const originalContent = googleBtnWrap.innerHTML;
+            googleBtnWrap.innerHTML = '<div class="flex items-center justify-center space-x-2 text-slate-500"><div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><span class="text-sm font-medium">Authenticating...</span></div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        googleToken: response.credential,
+                        role: selectedRole
+                    })
+                });
+                
+                const data = await res.json();
+                if (res.ok && data.success && data.token) {
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("role", data.user.role || selectedRole);
+                    
+                    // Smooth visual transition before Redirect
+                    googleBtnWrap.innerHTML = '<span class="text-emerald-500 font-bold text-sm">✓ Success</span>';
+                    
+                    setTimeout(() => {
+                        if ((data.user.role || selectedRole) === "citizen") {
+                            window.location.href = "../pages/citizen.html";
+                        } else {
+                            window.location.href = "../pages/authority.html";
+                        }
+                    }, 500);
+                } else {
+                    alert(data.message || "Google Login failed. Please try again.");
+                    googleBtnWrap.innerHTML = originalContent; // Reset button
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Server connection failed. Make sure backend is running.");
+                googleBtnWrap.innerHTML = originalContent;
+            }
         }
 
         document.getElementById("appleSignInBtn").addEventListener('click', async () => {
